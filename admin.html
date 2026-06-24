@@ -519,21 +519,15 @@
         </div>
         <div class="edit-panel">
           <div class="config-box">
-            <p>Enter your GitHub details below. You only need to do this once — they're saved in your browser.</p>
+            <p>Paste your GitHub access token below. You only need to do this once.</p>
             <div class="field">
-              <div class="field-label">GitHub username</div>
-              <input class="field-input" id="ghUsername" type="text" placeholder="jasperbaur">
+              <div class="field-label">GitHub personal access token <a href="https://github.com/settings/tokens/new?scopes=repo&description=Jasper+site+editor" target="_blank" style="color:var(--black);font-size:11px;margin-left:6px;">Get new token ↗</a></div>
+              <input class="field-input" id="ghToken" type="text" placeholder="ghp_..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
             </div>
-            <div class="field">
-              <div class="field-label">GitHub personal access token <a href="https://github.com/settings/tokens/new?scopes=repo&description=Jasper+site+editor" target="_blank" style="color:var(--black);font-size:11px;margin-left:6px;">Get token ↗</a></div>
-              <input class="field-input" id="ghToken" type="password" placeholder="ghp_...">
-            </div>
-            <div class="field">
-              <div class="field-label">Repository name</div>
-              <input class="field-input" id="ghRepo" type="text" placeholder="jasperbaur.github.io">
-            </div>
+            <input type="hidden" id="ghUsername" value="jasperbaur">
+            <input type="hidden" id="ghRepo" value="jasperbaur.github.io">
             <button class="btn" onclick="saveGithubConfig()">Save connection settings</button>
-            <span id="ghConfigStatus" style="font-size:12px;margin-left:10px;color:var(--gray-600);"></span>
+            <span id="ghConfigStatus" style="font-size:12px;margin-left:10px;"></span>
           </div>
 
           <div class="publish-steps">
