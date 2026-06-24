@@ -1,0 +1,1054 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Jasper Baur — Site editor</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --black: #0f0f0f;
+    --white: #ffffff;
+    --gray-100: #f5f5f3;
+    --gray-200: #e8e8e5;
+    --gray-400: #b0afab;
+    --gray-600: #6b6a67;
+    --gray-800: #2c2c2a;
+    --accent: #0f0f0f;
+    --danger: #c0392b;
+    --success: #27ae60;
+    --warning: #e67e22;
+    --radius: 8px;
+    --radius-lg: 12px;
+    --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  }
+
+  body {
+    font-family: var(--font);
+    background: var(--gray-100);
+    color: var(--black);
+    min-height: 100vh;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  /* TOPBAR */
+  .topbar {
+    background: var(--white);
+    border-bottom: 1px solid var(--gray-200);
+    padding: 0 24px;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .topbar-left { display: flex; align-items: center; gap: 16px; }
+  .site-name { font-size: 15px; font-weight: 600; letter-spacing: -0.01em; }
+  .site-name span { font-weight: 400; color: var(--gray-600); }
+  .save-status { font-size: 12px; color: var(--gray-400); display: flex; align-items: center; gap: 5px; }
+  .save-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--gray-400); }
+  .save-dot.saved { background: var(--success); }
+  .save-dot.unsaved { background: var(--warning); }
+  .topbar-right { display: flex; gap: 10px; align-items: center; }
+  .btn { padding: 8px 16px; border-radius: var(--radius); font-size: 13px; font-weight: 500; cursor: pointer; border: 1px solid var(--gray-200); background: var(--white); color: var(--black); transition: all 0.15s; display: inline-flex; align-items: center; gap: 6px; }
+  .btn:hover { background: var(--gray-100); }
+  .btn-primary { background: var(--black); color: var(--white); border-color: var(--black); }
+  .btn-primary:hover { background: var(--gray-800); }
+  .btn-primary:disabled { background: var(--gray-400); border-color: var(--gray-400); cursor: not-allowed; }
+  .btn-danger { color: var(--danger); border-color: var(--danger); }
+  .btn-danger:hover { background: #fdf2f2; }
+
+  /* LAYOUT */
+  .layout { display: flex; min-height: calc(100vh - 56px); }
+
+  /* SIDEBAR */
+  .sidebar {
+    width: 220px;
+    background: var(--white);
+    border-right: 1px solid var(--gray-200);
+    padding: 20px 0;
+    flex-shrink: 0;
+    position: sticky;
+    top: 56px;
+    height: calc(100vh - 56px);
+    overflow-y: auto;
+  }
+  .nav-section-label {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--gray-400);
+    padding: 16px 20px 6px;
+  }
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 20px;
+    font-size: 13px;
+    color: var(--gray-600);
+    cursor: pointer;
+    transition: all 0.1s;
+    border-left: 2px solid transparent;
+    user-select: none;
+  }
+  .nav-item:hover { background: var(--gray-100); color: var(--black); }
+  .nav-item.active { color: var(--black); font-weight: 500; background: var(--gray-100); border-left-color: var(--black); }
+  .nav-item svg { width: 16px; height: 16px; flex-shrink: 0; }
+  .nav-badge { margin-left: auto; font-size: 11px; background: var(--gray-200); color: var(--gray-600); border-radius: 20px; padding: 1px 7px; }
+
+  /* MAIN */
+  .main { flex: 1; padding: 32px; max-width: 860px; }
+
+  /* SECTIONS */
+  .section { display: none; }
+  .section.active { display: block; }
+  .section-header { margin-bottom: 24px; }
+  .section-title { font-size: 20px; font-weight: 600; letter-spacing: -0.02em; margin-bottom: 4px; }
+  .section-desc { font-size: 13px; color: var(--gray-600); }
+
+  /* PROJECTS GRID */
+  .projects-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px; margin-bottom: 32px; }
+  .project-card {
+    background: var(--white);
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .project-card:hover { border-color: var(--gray-600); transform: translateY(-1px); }
+  .project-card.editing { border: 2px solid var(--black); }
+  .project-cover {
+    height: 120px;
+    background: var(--gray-200);
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .project-cover img { width: 100%; height: 100%; object-fit: cover; }
+  .project-cover-empty { color: var(--gray-400); font-size: 12px; text-align: center; }
+  .project-cover-empty svg { width: 28px; height: 28px; margin-bottom: 4px; display: block; margin-inline: auto; }
+  .project-status {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 3px 8px;
+    border-radius: 20px;
+  }
+  .status-published { background: rgba(39,174,96,0.15); color: #1a7a40; }
+  .status-draft { background: rgba(230,126,34,0.15); color: #b5601a; }
+  .photo-count {
+    position: absolute;
+    bottom: 8px;
+    left: 8px;
+    font-size: 11px;
+    background: rgba(0,0,0,0.55);
+    color: white;
+    padding: 2px 8px;
+    border-radius: 20px;
+  }
+  .project-info { padding: 12px 14px; }
+  .project-title { font-size: 14px; font-weight: 600; margin-bottom: 2px; }
+  .project-subtitle { font-size: 12px; color: var(--gray-600); }
+  .add-project-card {
+    background: transparent;
+    border: 1.5px dashed var(--gray-200);
+    border-radius: var(--radius-lg);
+    height: 160px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    cursor: pointer;
+    color: var(--gray-400);
+    font-size: 13px;
+    transition: all 0.15s;
+  }
+  .add-project-card:hover { border-color: var(--gray-600); color: var(--black); background: var(--white); }
+  .add-project-card svg { width: 24px; height: 24px; }
+
+  /* EDIT PANEL */
+  .edit-panel {
+    background: var(--white);
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-lg);
+    padding: 24px;
+    margin-top: 8px;
+  }
+  .edit-panel-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+  .edit-panel-title { font-size: 16px; font-weight: 600; }
+  .edit-panel-actions { display: flex; gap: 8px; }
+
+  /* FORM */
+  .field { margin-bottom: 20px; }
+  .field-label { font-size: 12px; font-weight: 500; color: var(--gray-600); margin-bottom: 6px; letter-spacing: 0.02em; }
+  .field-input, .field-textarea, .field-select {
+    width: 100%;
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius);
+    padding: 9px 12px;
+    font-size: 13px;
+    font-family: var(--font);
+    color: var(--black);
+    background: var(--white);
+    transition: border-color 0.15s;
+    outline: none;
+  }
+  .field-input:focus, .field-textarea:focus, .field-select:focus { border-color: var(--black); }
+  .field-textarea { resize: vertical; min-height: 80px; line-height: 1.6; }
+  .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+  /* PHOTO STRIP */
+  .photo-strip { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 8px; align-items: flex-start; }
+  .photo-item {
+    width: 80px;
+    position: relative;
+    cursor: grab;
+  }
+  .photo-item:active { cursor: grabbing; }
+  .photo-item.dragging { opacity: 0.4; }
+  .photo-thumb {
+    width: 80px;
+    height: 80px;
+    background: var(--gray-200);
+    border-radius: var(--radius);
+    border: 1px solid var(--gray-200);
+    overflow: hidden;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .photo-thumb img { width: 100%; height: 100%; object-fit: cover; }
+  .photo-remove {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    width: 20px;
+    height: 20px;
+    background: rgba(0,0,0,0.7);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    font-size: 11px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.15s;
+  }
+  .photo-thumb:hover .photo-remove { opacity: 1; }
+  .photo-caption-input {
+    width: 80px;
+    border: 1px solid var(--gray-200);
+    border-radius: 4px;
+    padding: 3px 6px;
+    font-size: 10px;
+    font-family: var(--font);
+    margin-top: 4px;
+    outline: none;
+    color: var(--black);
+  }
+  .photo-caption-input:focus { border-color: var(--black); }
+  .add-photo-btn {
+    width: 80px;
+    height: 80px;
+    border: 1.5px dashed var(--gray-200);
+    border-radius: var(--radius);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    cursor: pointer;
+    color: var(--gray-400);
+    font-size: 11px;
+    background: transparent;
+    transition: all 0.15s;
+  }
+  .add-photo-btn:hover { border-color: var(--black); color: var(--black); background: var(--gray-100); }
+  .add-photo-btn svg { width: 20px; height: 20px; }
+  .drag-hint { font-size: 11px; color: var(--gray-400); margin-bottom: 12px; }
+
+  /* ABOUT SECTION */
+  .about-avatar {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: var(--gray-200);
+    overflow: hidden;
+    margin-bottom: 16px;
+    cursor: pointer;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px dashed var(--gray-200);
+    transition: border-color 0.15s;
+  }
+  .about-avatar:hover { border-color: var(--black); }
+  .about-avatar img { width: 100%; height: 100%; object-fit: cover; }
+  .about-avatar-hint { font-size: 10px; color: var(--gray-400); text-align: center; }
+
+  /* TOAST */
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    background: var(--black);
+    color: var(--white);
+    padding: 12px 20px;
+    border-radius: var(--radius);
+    font-size: 13px;
+    z-index: 999;
+    opacity: 0;
+    transform: translateY(8px);
+    transition: all 0.2s;
+    pointer-events: none;
+  }
+  .toast.show { opacity: 1; transform: translateY(0); }
+  .toast.error { background: var(--danger); }
+
+  /* MODAL */
+  .modal-bg {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 200;
+    align-items: center;
+    justify-content: center;
+  }
+  .modal-bg.open { display: flex; }
+  .modal {
+    background: var(--white);
+    border-radius: var(--radius-lg);
+    padding: 28px;
+    width: 400px;
+    max-width: 90vw;
+  }
+  .modal-title { font-size: 16px; font-weight: 600; margin-bottom: 8px; }
+  .modal-desc { font-size: 13px; color: var(--gray-600); margin-bottom: 20px; }
+  .modal-actions { display: flex; gap: 10px; justify-content: flex-end; }
+
+  /* PUBLISH PANEL */
+  .publish-steps { margin-top: 20px; }
+  .publish-step { display: flex; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--gray-200); }
+  .publish-step:last-child { border-bottom: none; }
+  .step-num { width: 24px; height: 24px; border-radius: 50%; background: var(--black); color: var(--white); font-size: 11px; font-weight: 600; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .step-info { flex: 1; }
+  .step-title { font-size: 13px; font-weight: 500; margin-bottom: 2px; }
+  .step-desc { font-size: 12px; color: var(--gray-600); }
+  .step-status { font-size: 12px; font-weight: 500; }
+  .step-status.done { color: var(--success); }
+  .step-status.pending { color: var(--gray-400); }
+  .step-status.error { color: var(--danger); }
+
+  /* GITHUB CONFIG */
+  .config-box { background: var(--gray-100); border-radius: var(--radius); padding: 16px; margin-bottom: 20px; }
+  .config-box p { font-size: 12px; color: var(--gray-600); margin-bottom: 12px; }
+
+  /* HIDDEN FILE INPUT */
+  #fileInput { display: none; }
+
+  /* LOADING */
+  .spinner { width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.3); border-top-color: white; border-radius: 50%; animation: spin 0.6s linear infinite; display: inline-block; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* EMPTY STATE */
+  .empty-state { text-align: center; padding: 40px 20px; color: var(--gray-400); }
+  .empty-state svg { width: 40px; height: 40px; margin-bottom: 12px; }
+  .empty-state p { font-size: 13px; }
+
+  /* LOGIN */
+  .login-screen {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--gray-100);
+  }
+  .login-card {
+    background: var(--white);
+    border: 1px solid var(--gray-200);
+    border-radius: var(--radius-lg);
+    padding: 40px;
+    width: 360px;
+    text-align: center;
+  }
+  .login-name { font-size: 22px; font-weight: 600; letter-spacing: -0.02em; margin-bottom: 4px; }
+  .login-sub { font-size: 13px; color: var(--gray-600); margin-bottom: 28px; }
+  .login-field { text-align: left; margin-bottom: 16px; }
+</style>
+</head>
+<body>
+
+<!-- LOGIN SCREEN -->
+<div id="loginScreen" class="login-screen">
+  <div class="login-card">
+    <div class="login-name">Jasper Baur</div>
+    <div class="login-sub">Site editor — sign in to continue</div>
+    <div class="login-field">
+      <div class="field-label">Password</div>
+      <input class="field-input" type="password" id="passwordInput" placeholder="Enter your password" autocomplete="current-password">
+    </div>
+    <button class="btn btn-primary" style="width:100%;justify-content:center;" onclick="login()">Sign in</button>
+    <div id="loginError" style="color:var(--danger);font-size:12px;margin-top:10px;display:none;">Incorrect password. Try again.</div>
+  </div>
+</div>
+
+<!-- MAIN APP (hidden until login) -->
+<div id="appScreen" style="display:none;">
+
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="site-name">Jasper Baur <span>/ Site editor</span></div>
+      <div class="save-status">
+        <div class="save-dot" id="saveDot"></div>
+        <span id="saveStatusText">All changes saved</span>
+      </div>
+    </div>
+    <div class="topbar-right">
+      <button class="btn" onclick="previewSite()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+        Preview site
+      </button>
+      <button class="btn btn-primary" id="publishBtn" onclick="publishSite()">
+        Publish changes
+      </button>
+    </div>
+  </div>
+
+  <div class="layout">
+    <div class="sidebar">
+      <div class="nav-section-label">Content</div>
+      <div class="nav-item active" onclick="showSection('projects', this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        Projects
+      </div>
+      <div class="nav-item" onclick="showSection('about', this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        About & bio
+      </div>
+      <div class="nav-item" onclick="showSection('contact', this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+        Contact info
+      </div>
+      <div class="nav-section-label">Site</div>
+      <div class="nav-item" onclick="showSection('publish', this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/></svg>
+        Publish & settings
+      </div>
+    </div>
+
+    <div class="main">
+
+      <!-- PROJECTS SECTION -->
+      <div id="section-projects" class="section active">
+        <div class="section-header">
+          <div class="section-title">Projects</div>
+          <div class="section-desc">Click any project to edit its photos and description. Changes are saved automatically.</div>
+        </div>
+        <div class="projects-grid" id="projectsGrid"></div>
+        <div id="editPanel" style="display:none;"></div>
+      </div>
+
+      <!-- ABOUT SECTION -->
+      <div id="section-about" class="section">
+        <div class="section-header">
+          <div class="section-title">About & bio</div>
+          <div class="section-desc">This text appears in the About section of your website.</div>
+        </div>
+        <div class="edit-panel">
+          <div class="field">
+            <div class="field-label">Page headline</div>
+            <input class="field-input" id="aboutTagline" type="text" placeholder="Your headline" oninput="markUnsaved()">
+          </div>
+          <div class="field">
+            <div class="field-label">Short bio <span style="color:var(--gray-400);font-weight:400;">(shown in header)</span></div>
+            <textarea class="field-textarea" id="aboutShort" rows="2" placeholder="One or two sentences..." oninput="markUnsaved()"></textarea>
+          </div>
+          <div class="field">
+            <div class="field-label">Full bio <span style="color:var(--gray-400);font-weight:400;">(shown in About section)</span></div>
+            <textarea class="field-textarea" id="aboutFull" rows="6" placeholder="Your full bio..." oninput="markUnsaved()"></textarea>
+          </div>
+          <button class="btn btn-primary" onclick="saveAbout()">Save changes</button>
+        </div>
+      </div>
+
+      <!-- CONTACT SECTION -->
+      <div id="section-contact" class="section">
+        <div class="section-header">
+          <div class="section-title">Contact info</div>
+          <div class="section-desc">How people reach you. Only fill in what you want shown publicly.</div>
+        </div>
+        <div class="edit-panel">
+          <div class="field-row">
+            <div class="field">
+              <div class="field-label">Email address</div>
+              <input class="field-input" id="contactEmail" type="email" placeholder="jasper@example.com" oninput="markUnsaved()">
+            </div>
+            <div class="field">
+              <div class="field-label">Instagram URL</div>
+              <input class="field-input" id="contactInstagram" type="url" placeholder="https://instagram.com/..." oninput="markUnsaved()">
+            </div>
+          </div>
+          <button class="btn btn-primary" onclick="saveContact()">Save changes</button>
+        </div>
+      </div>
+
+      <!-- PUBLISH SECTION -->
+      <div id="section-publish" class="section">
+        <div class="section-header">
+          <div class="section-title">Publish & settings</div>
+          <div class="section-desc">Connect your GitHub account to publish changes directly to your live website.</div>
+        </div>
+        <div class="edit-panel">
+          <div class="config-box">
+            <p>Enter your GitHub details below. You only need to do this once — they're saved in your browser.</p>
+            <div class="field">
+              <div class="field-label">GitHub username</div>
+              <input class="field-input" id="ghUsername" type="text" placeholder="jasperbaur">
+            </div>
+            <div class="field">
+              <div class="field-label">GitHub personal access token <a href="https://github.com/settings/tokens/new?scopes=repo&description=Jasper+site+editor" target="_blank" style="color:var(--black);font-size:11px;margin-left:6px;">Get token ↗</a></div>
+              <input class="field-input" id="ghToken" type="password" placeholder="ghp_...">
+            </div>
+            <div class="field">
+              <div class="field-label">Repository name</div>
+              <input class="field-input" id="ghRepo" type="text" placeholder="jasperbaur.github.io">
+            </div>
+            <button class="btn" onclick="saveGithubConfig()">Save connection settings</button>
+            <span id="ghConfigStatus" style="font-size:12px;margin-left:10px;color:var(--gray-600);"></span>
+          </div>
+
+          <div class="publish-steps">
+            <div class="publish-step">
+              <div class="step-num">1</div>
+              <div class="step-info">
+                <div class="step-title">GitHub connected</div>
+                <div class="step-desc">Your editor can push changes to GitHub</div>
+              </div>
+              <div class="step-status" id="stepGh">—</div>
+            </div>
+            <div class="publish-step">
+              <div class="step-num">2</div>
+              <div class="step-info">
+                <div class="step-title">Changes ready</div>
+                <div class="step-desc">Content saved and ready to publish</div>
+              </div>
+              <div class="step-status" id="stepChanges">—</div>
+            </div>
+            <div class="publish-step">
+              <div class="step-num">3</div>
+              <div class="step-info">
+                <div class="step-title">Live on your website</div>
+                <div class="step-desc">Visitors will see your updates within 60 seconds</div>
+              </div>
+              <div class="step-status" id="stepLive">—</div>
+            </div>
+          </div>
+
+          <div style="margin-top:20px;">
+            <button class="btn btn-primary" onclick="publishSite()">Publish changes now</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- CONFIRM DELETE MODAL -->
+<div class="modal-bg" id="deleteModal">
+  <div class="modal">
+    <div class="modal-title">Remove this project?</div>
+    <div class="modal-desc">This will remove the project from your website. Your photos won't be deleted from GitHub.</div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal('deleteModal')">Cancel</button>
+      <button class="btn btn-danger" id="confirmDeleteBtn">Remove project</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADD PROJECT MODAL -->
+<div class="modal-bg" id="addProjectModal">
+  <div class="modal">
+    <div class="modal-title">New project</div>
+    <div class="modal-desc">Give your new project a name. You can add photos and a description after.</div>
+    <div class="field">
+      <div class="field-label">Project name</div>
+      <input class="field-input" id="newProjectName" type="text" placeholder="e.g. Pacific Northwest">
+    </div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal('addProjectModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="confirmAddProject()">Create project</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+<input type="file" id="fileInput" accept="image/*" multiple>
+
+<script>
+// ─── CONFIG ───────────────────────────────────────────────────────────────────
+const ADMIN_PASSWORD = 'jasper2024'; // Change this to something Jasper will remember
+const CONTENT_FILE = 'content.json';
+
+// ─── STATE ────────────────────────────────────────────────────────────────────
+let content = null;
+let currentProjectId = null;
+let unsaved = false;
+let fileInputCallback = null;
+
+// ─── LOGIN ────────────────────────────────────────────────────────────────────
+function login() {
+  const pw = document.getElementById('passwordInput').value;
+  if (pw === ADMIN_PASSWORD) {
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('appScreen').style.display = 'block';
+    initApp();
+  } else {
+    document.getElementById('loginError').style.display = 'block';
+  }
+}
+document.getElementById('passwordInput').addEventListener('keydown', e => { if (e.key === 'Enter') login(); });
+
+// ─── INIT ─────────────────────────────────────────────────────────────────────
+function initApp() {
+  loadGithubConfig();
+  loadContent();
+}
+
+function loadContent() {
+  const saved = localStorage.getItem('jasper_content');
+  if (saved) {
+    content = JSON.parse(saved);
+  } else {
+    content = getDefaultContent();
+  }
+  renderAll();
+}
+
+function getDefaultContent() {
+  return {
+    site: {
+      name: 'Jasper Baur',
+      tagline: 'Yielding to the pull toward the edge of things',
+      email: '',
+      instagram: 'https://www.instagram.com/baurjasper/',
+      bio_short: 'Photographer and naturalist with a decade of experience capturing the natural world across remote landscapes.',
+      bio_full: 'I am a photographer and naturalist with more than a decade of experience capturing the natural world. I specialize in camera trapping — using remotely triggered cameras to capture images of elusive wildlife rarely observed otherwise.\n\nAvailable for editorial assignments, brand expeditions, and conservation documentation worldwide.'
+    },
+    projects: [
+      { id: 'camera-trapping', title: 'Camera trapping', status: 'published', cover: '', description: 'A decade of fieldwork using remotely triggered cameras to reveal elusive wildlife rarely seen by human eyes.', photos: [] },
+      { id: 'te-araroa', title: 'Te Araroa', status: 'published', cover: '', description: '1,800 miles on foot from Cape Reinga to Bluff — four months traversing the full length of New Zealand.', photos: [] },
+      { id: 'snakes-reptiles', title: 'Snakes & reptiles', status: 'published', cover: '', description: 'Close encounters with reptiles across the Americas.', photos: [] },
+      { id: 'find-and-film', title: 'Find & film', status: 'published', cover: '', description: 'A project about the pursuit itself — tracking, locating, and documenting wildlife in the field.', photos: [] },
+      { id: 'pacific-northwest', title: 'Pacific Northwest', status: 'draft', cover: '', description: '', photos: [] }
+    ]
+  };
+}
+
+// ─── RENDER ───────────────────────────────────────────────────────────────────
+function renderAll() {
+  renderProjects();
+  renderAbout();
+  renderContact();
+}
+
+function renderProjects() {
+  const grid = document.getElementById('projectsGrid');
+  grid.innerHTML = '';
+
+  content.projects.forEach(project => {
+    const card = document.createElement('div');
+    card.className = 'project-card' + (currentProjectId === project.id ? ' editing' : '');
+    card.onclick = () => openProjectEditor(project.id);
+    card.innerHTML = `
+      <div class="project-cover">
+        ${project.cover ? `<img src="${project.cover}" alt="${project.title}">` : `<div class="project-cover-empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg><div>No cover photo</div></div>`}
+        <div class="project-status status-${project.status}">${project.status}</div>
+        ${project.photos.length ? `<div class="photo-count">${project.photos.length} photo${project.photos.length !== 1 ? 's' : ''}</div>` : ''}
+      </div>
+      <div class="project-info">
+        <div class="project-title">${project.title}</div>
+        <div class="project-subtitle">${project.photos.length ? project.photos.length + ' photos' : 'No photos yet'} · ${project.status}</div>
+      </div>
+    `;
+    grid.appendChild(card);
+  });
+
+  const addCard = document.createElement('div');
+  addCard.className = 'add-project-card';
+  addCard.onclick = () => openModal('addProjectModal');
+  addCard.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>Add project`;
+  grid.appendChild(addCard);
+}
+
+function renderAbout() {
+  document.getElementById('aboutTagline').value = content.site.tagline || '';
+  document.getElementById('aboutShort').value = content.site.bio_short || '';
+  document.getElementById('aboutFull').value = content.site.bio_full || '';
+}
+
+function renderContact() {
+  document.getElementById('contactEmail').value = content.site.email || '';
+  document.getElementById('contactInstagram').value = content.site.instagram || '';
+}
+
+// ─── PROJECT EDITOR ───────────────────────────────────────────────────────────
+function openProjectEditor(projectId) {
+  currentProjectId = projectId;
+  const project = content.projects.find(p => p.id === projectId);
+  renderProjects();
+
+  const panel = document.getElementById('editPanel');
+  panel.style.display = 'block';
+  panel.innerHTML = `
+    <div class="edit-panel">
+      <div class="edit-panel-header">
+        <div class="edit-panel-title">Editing: ${project.title}</div>
+        <div class="edit-panel-actions">
+          <select class="field-select" style="width:auto;" onchange="updateProjectStatus('${projectId}', this.value)">
+            <option value="published" ${project.status === 'published' ? 'selected' : ''}>Published</option>
+            <option value="draft" ${project.status === 'draft' ? 'selected' : ''}>Draft (hidden)</option>
+          </select>
+          <button class="btn btn-danger" onclick="confirmDeleteProject('${projectId}')">Remove</button>
+        </div>
+      </div>
+
+      <div class="field">
+        <div class="field-label">Project title</div>
+        <input class="field-input" type="text" value="${project.title}" onchange="updateProjectField('${projectId}', 'title', this.value)">
+      </div>
+
+      <div class="field">
+        <div class="field-label">Description</div>
+        <textarea class="field-textarea" rows="3" onchange="updateProjectField('${projectId}', 'description', this.value)">${project.description}</textarea>
+      </div>
+
+      <div class="field">
+        <div class="field-label">Photos <span style="color:var(--gray-400);font-weight:400;">(drag to reorder · first photo is the cover)</span></div>
+        <div class="drag-hint">The first photo will appear as the project thumbnail on the main page.</div>
+        <div class="photo-strip" id="photoStrip-${projectId}">
+          ${renderPhotoStrip(project)}
+        </div>
+      </div>
+    </div>
+  `;
+
+  initDragDrop(projectId);
+  panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function renderPhotoStrip(project) {
+  let html = project.photos.map((photo, i) => `
+    <div class="photo-item" draggable="true" data-index="${i}">
+      <div class="photo-thumb">
+        ${photo.url ? `<img src="${photo.url}" alt="">` : `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:24px;height:24px;color:var(--gray-400)"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>`}
+        <button class="photo-remove" onclick="removePhoto('${project.id}', ${i})" title="Remove photo">✕</button>
+      </div>
+      <input class="photo-caption-input" type="text" placeholder="Caption..." value="${photo.caption || ''}" onchange="updatePhotoCaption('${project.id}', ${i}, this.value)" title="Photo caption">
+    </div>
+  `).join('');
+
+  html += `<button class="add-photo-btn" onclick="addPhotos('${project.id}')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    Add photos
+  </button>`;
+  return html;
+}
+
+function updateProjectField(projectId, field, value) {
+  const project = content.projects.find(p => p.id === projectId);
+  if (project) { project[field] = value; saveLocal(); }
+}
+
+function updateProjectStatus(projectId, status) {
+  updateProjectField(projectId, 'status', status);
+  renderProjects();
+}
+
+function updatePhotoCaption(projectId, index, caption) {
+  const project = content.projects.find(p => p.id === projectId);
+  if (project && project.photos[index]) { project.photos[index].caption = caption; saveLocal(); }
+}
+
+// ─── PHOTOS ───────────────────────────────────────────────────────────────────
+function addPhotos(projectId) {
+  fileInputCallback = (files) => handlePhotoUpload(projectId, files);
+  document.getElementById('fileInput').multiple = true;
+  document.getElementById('fileInput').click();
+}
+
+document.getElementById('fileInput').addEventListener('change', function() {
+  if (fileInputCallback && this.files.length) {
+    fileInputCallback(this.files);
+    fileInputCallback = null;
+    this.value = '';
+  }
+});
+
+function handlePhotoUpload(projectId, files) {
+  const project = content.projects.find(p => p.id === projectId);
+  let loaded = 0;
+  Array.from(files).forEach(file => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      project.photos.push({ id: 'photo-' + Date.now() + '-' + loaded, url: e.target.result, caption: '', filename: file.name });
+      if (!project.cover) project.cover = e.target.result;
+      loaded++;
+      saveLocal();
+      if (loaded === files.length) {
+        openProjectEditor(projectId);
+        showToast(files.length + ' photo' + (files.length > 1 ? 's' : '') + ' added');
+      }
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+function removePhoto(projectId, index) {
+  const project = content.projects.find(p => p.id === projectId);
+  project.photos.splice(index, 1);
+  if (project.cover && project.photos.length > 0) project.cover = project.photos[0].url;
+  if (project.photos.length === 0) project.cover = '';
+  saveLocal();
+  openProjectEditor(projectId);
+}
+
+// ─── DRAG & DROP REORDER ──────────────────────────────────────────────────────
+function initDragDrop(projectId) {
+  const strip = document.getElementById('photoStrip-' + projectId);
+  if (!strip) return;
+  let dragIdx = null;
+
+  strip.querySelectorAll('.photo-item').forEach((item, i) => {
+    item.addEventListener('dragstart', () => { dragIdx = i; item.classList.add('dragging'); });
+    item.addEventListener('dragend', () => item.classList.remove('dragging'));
+    item.addEventListener('dragover', (e) => { e.preventDefault(); });
+    item.addEventListener('drop', () => {
+      if (dragIdx === null || dragIdx === i) return;
+      const project = content.projects.find(p => p.id === projectId);
+      const moved = project.photos.splice(dragIdx, 1)[0];
+      project.photos.splice(i, 0, moved);
+      project.cover = project.photos[0]?.url || '';
+      saveLocal();
+      openProjectEditor(projectId);
+    });
+  });
+}
+
+// ─── ABOUT & CONTACT ─────────────────────────────────────────────────────────
+function saveAbout() {
+  content.site.tagline = document.getElementById('aboutTagline').value;
+  content.site.bio_short = document.getElementById('aboutShort').value;
+  content.site.bio_full = document.getElementById('aboutFull').value;
+  saveLocal();
+  showToast('About section saved');
+}
+
+function saveContact() {
+  content.site.email = document.getElementById('contactEmail').value;
+  content.site.instagram = document.getElementById('contactInstagram').value;
+  saveLocal();
+  showToast('Contact info saved');
+}
+
+// ─── ADD / DELETE PROJECTS ────────────────────────────────────────────────────
+function confirmAddProject() {
+  const name = document.getElementById('newProjectName').value.trim();
+  if (!name) return;
+  const id = name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+  content.projects.push({ id, title: name, status: 'draft', cover: '', description: '', photos: [] });
+  saveLocal();
+  renderProjects();
+  closeModal('addProjectModal');
+  document.getElementById('newProjectName').value = '';
+  openProjectEditor(id);
+  showToast('Project created');
+}
+
+let deleteTargetId = null;
+function confirmDeleteProject(projectId) {
+  deleteTargetId = projectId;
+  openModal('deleteModal');
+  document.getElementById('confirmDeleteBtn').onclick = () => {
+    content.projects = content.projects.filter(p => p.id !== deleteTargetId);
+    if (currentProjectId === deleteTargetId) {
+      currentProjectId = null;
+      document.getElementById('editPanel').style.display = 'none';
+    }
+    saveLocal();
+    renderProjects();
+    closeModal('deleteModal');
+    showToast('Project removed');
+  };
+}
+
+// ─── SAVE ─────────────────────────────────────────────────────────────────────
+function saveLocal() {
+  localStorage.setItem('jasper_content', JSON.stringify(content));
+  markUnsaved();
+}
+
+function markUnsaved() {
+  unsaved = true;
+  document.getElementById('saveDot').className = 'save-dot unsaved';
+  document.getElementById('saveStatusText').textContent = 'Unsaved changes';
+}
+
+function markSaved() {
+  unsaved = false;
+  document.getElementById('saveDot').className = 'save-dot saved';
+  document.getElementById('saveStatusText').textContent = 'All changes saved';
+}
+
+// ─── GITHUB & PUBLISH ─────────────────────────────────────────────────────────
+function loadGithubConfig() {
+  const cfg = JSON.parse(localStorage.getItem('jasper_gh_config') || '{}');
+  if (cfg.username) document.getElementById('ghUsername').value = cfg.username;
+  if (cfg.token) document.getElementById('ghToken').value = cfg.token;
+  if (cfg.repo) document.getElementById('ghRepo').value = cfg.repo;
+}
+
+function saveGithubConfig() {
+  const cfg = {
+    username: document.getElementById('ghUsername').value.trim(),
+    token: document.getElementById('ghToken').value.trim(),
+    repo: document.getElementById('ghRepo').value.trim()
+  };
+  localStorage.setItem('jasper_gh_config', JSON.stringify(cfg));
+  document.getElementById('ghConfigStatus').textContent = 'Saved ✓';
+  setTimeout(() => document.getElementById('ghConfigStatus').textContent = '', 2000);
+}
+
+function getGithubConfig() {
+  return JSON.parse(localStorage.getItem('jasper_gh_config') || '{}');
+}
+
+async function publishSite() {
+  const cfg = getGithubConfig();
+  if (!cfg.username || !cfg.token || !cfg.repo) {
+    showSection('publish', document.querySelector('.nav-item:nth-child(4)'));
+    showToast('Please set up your GitHub connection first', true);
+    return;
+  }
+
+  const btn = document.getElementById('publishBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Publishing...';
+
+  updateStepStatus('stepGh', 'pending', 'Connecting...');
+  updateStepStatus('stepChanges', 'pending', 'Preparing...');
+  updateStepStatus('stepLive', 'pending', 'Waiting...');
+
+  try {
+    const contentToPublish = prepareContentForPublish();
+    const contentJson = JSON.stringify(contentToPublish, null, 2);
+
+    await pushFileToGithub(cfg, CONTENT_FILE, contentJson, 'Update site content');
+
+    updateStepStatus('stepGh', 'done', '✓ Connected');
+    updateStepStatus('stepChanges', 'done', '✓ Published');
+    setTimeout(() => updateStepStatus('stepLive', 'done', '✓ Live'), 3000);
+
+    markSaved();
+    showToast('Published! Your site will update within 60 seconds.');
+  } catch (err) {
+    updateStepStatus('stepGh', 'error', '✗ Failed');
+    showToast('Publish failed: ' + err.message, true);
+    console.error(err);
+  }
+
+  btn.disabled = false;
+  btn.innerHTML = 'Publish changes';
+}
+
+function prepareContentForPublish() {
+  const pub = JSON.parse(JSON.stringify(content));
+  pub.projects.forEach(p => {
+    p.photos = p.photos.map(photo => ({
+      id: photo.id,
+      url: photo.filename ? `images/${p.id}/${photo.filename}` : photo.url,
+      caption: photo.caption || ''
+    }));
+    if (p.photos.length > 0) p.cover = p.photos[0].url;
+  });
+  return pub;
+}
+
+async function pushFileToGithub(cfg, path, content, message) {
+  const apiBase = `https://api.github.com/repos/${cfg.username}/${cfg.repo}/contents/${path}`;
+  const headers = {
+    'Authorization': `token ${cfg.token}`,
+    'Content-Type': 'application/json',
+    'Accept': 'application/vnd.github.v3+json'
+  };
+
+  let sha = null;
+  try {
+    const existing = await fetch(apiBase, { headers });
+    if (existing.ok) { const data = await existing.json(); sha = data.sha; }
+  } catch(e) {}
+
+  const body = { message, content: btoa(unescape(encodeURIComponent(content))) };
+  if (sha) body.sha = sha;
+
+  const res = await fetch(apiBase, { method: 'PUT', headers, body: JSON.stringify(body) });
+  if (!res.ok) { const err = await res.json(); throw new Error(err.message || 'GitHub API error'); }
+  return res.json();
+}
+
+function updateStepStatus(id, type, text) {
+  const el = document.getElementById(id);
+  if (el) { el.className = 'step-status ' + type; el.textContent = text; }
+}
+
+function previewSite() {
+  const cfg = getGithubConfig();
+  const url = cfg.username ? `https://${cfg.username}.github.io` : '#';
+  if (url !== '#') window.open(url, '_blank');
+  else showToast('Set up GitHub first to preview your live site', true);
+}
+
+// ─── UI HELPERS ───────────────────────────────────────────────────────────────
+function showSection(name, el) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('section-' + name).classList.add('active');
+  if (el) el.classList.add('active');
+}
+
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+function showToast(msg, isError) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast' + (isError ? ' error' : '') + ' show';
+  setTimeout(() => t.className = 'toast', 3000);
+}
+
+// Close modals on background click
+document.querySelectorAll('.modal-bg').forEach(bg => {
+  bg.addEventListener('click', e => { if (e.target === bg) bg.classList.remove('open'); });
+});
+</script>
+</body>
+</html>
