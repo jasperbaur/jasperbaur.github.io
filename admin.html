@@ -928,17 +928,28 @@ function loadGithubConfig() {
 }
 
 function saveGithubConfig() {
-  const cfg = {
-    username: document.getElementById('ghUsername').value.trim(),
-    token: document.getElementById('ghToken').value.trim(),
-    repo: document.getElementById('ghRepo').value.trim()
-  };
+  const username = document.getElementById('ghUsername').value.trim();
+  const token = document.getElementById('ghToken').value.trim();
+  const repo = document.getElementById('ghRepo').value.trim();
+  if (!username || !token || !repo) {
+    document.getElementById('ghConfigStatus').textContent = 'Please fill in all three fields';
+    return;
+  }
+  const cfg = { username, token, repo };
   localStorage.setItem('jasper_gh_config', JSON.stringify(cfg));
-  document.getElementById('ghConfigStatus').textContent = 'Saved ✓';
-  setTimeout(() => document.getElementById('ghConfigStatus').textContent = '', 2000);
+  document.getElementById('ghConfigStatus').style.color = 'var(--success)';
+  document.getElementById('ghConfigStatus').textContent = 'Saved ✓ — token: ' + token.substring(0, 6) + '...';
+  setTimeout(() => document.getElementById('ghConfigStatus').textContent = '', 4000);
 }
 
 function getGithubConfig() {
+  // Always read live from fields first, fall back to localStorage
+  const liveUsername = document.getElementById('ghUsername') ? document.getElementById('ghUsername').value.trim() : '';
+  const liveToken = document.getElementById('ghToken') ? document.getElementById('ghToken').value.trim() : '';
+  const liveRepo = document.getElementById('ghRepo') ? document.getElementById('ghRepo').value.trim() : '';
+  if (liveUsername && liveToken && liveRepo) {
+    return { username: liveUsername, token: liveToken, repo: liveRepo };
+  }
   return JSON.parse(localStorage.getItem('jasper_gh_config') || '{}');
 }
 
