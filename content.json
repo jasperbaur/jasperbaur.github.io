@@ -5,7 +5,7 @@
     "email": "",
     "instagram": "https://www.instagram.com/baurjasper/",
     "bio_short": "Photographer and naturalist with a decade of experience capturing the natural world across remote landscapes.",
-    "bio_full": "I am a photographer and naturalist with more than a decade of experience capturing the natural world. I specialize in camera trapping — using remotely triggered cameras to capture images of elusive wildlife rarely observed otherwise. My work exists at the crux of conservation and visual storytelling, using photography to communicate the intrinsic value of natural environments and foster a deeper appreciation for the species with which we share our world.\n\nI am drawn to photography that requires patience, preparation, and a willingness to work in challenging environments. From the 1,800-mile length of New Zealand's Te Araroa trail to the high ridges of the Cascades and Sierra Nevada, my work is shaped by deep immersion in the landscapes I photograph. Available for editorial assignments, brand expeditions, and conservation documentation worldwide."
+    "bio_full": "I am a photographer and naturalist with more than a decade of experience capturing the natural world. I specialize in camera trapping — using remotely triggered cameras to capture images of elusive wildlife rarely observed otherwise.\n\nAvailable for editorial assignments, brand expeditions, and conservation documentation worldwide."
   },
   "projects": [
     {
@@ -13,46 +13,32 @@
       "title": "Camera trapping",
       "status": "published",
       "cover": "",
-      "description": "A decade of fieldwork using remotely triggered cameras to reveal elusive wildlife rarely seen by human eyes. Working across the Cascades, Sierra Nevada, and Central America, this ongoing body of work captures moments of animal behavior that no human presence could witness.",
-      "photos": [
-        { "id": "ct-1", "url": "", "caption": "" },
-        { "id": "ct-2", "url": "", "caption": "" },
-        { "id": "ct-3", "url": "", "caption": "" }
-      ]
+      "description": "A decade of fieldwork using remotely triggered cameras to reveal elusive wildlife rarely seen by human eyes.",
+      "photos": []
     },
     {
       "id": "te-araroa",
       "title": "Te Araroa",
       "status": "published",
       "cover": "",
-      "description": "1,800 miles on foot from Cape Reinga to Bluff — four months traversing the full length of New Zealand, North Island to South. A field log in images from one of the world's great long trails.",
-      "photos": [
-        { "id": "ta-1", "url": "", "caption": "First light, Harris Saddle" },
-        { "id": "ta-2", "url": "", "caption": "" },
-        { "id": "ta-3", "url": "", "caption": "" }
-      ]
+      "description": "1,800 miles on foot from Cape Reinga to Bluff — four months traversing the full length of New Zealand.",
+      "photos": []
     },
     {
       "id": "snakes-reptiles",
       "title": "Snakes & reptiles",
       "status": "published",
       "cover": "",
-      "description": "Close encounters with reptiles across the Americas — patient fieldwork revealing the quiet intelligence and beauty of species most people never stop to observe.",
-      "photos": [
-        { "id": "sr-1", "url": "", "caption": "" },
-        { "id": "sr-2", "url": "", "caption": "" }
-      ]
+      "description": "Close encounters with reptiles across the Americas.",
+      "photos": []
     },
     {
       "id": "find-and-film",
       "title": "Find & film",
       "status": "published",
       "cover": "",
-      "description": "A project about the pursuit itself — tracking, locating, and documenting wildlife in the field. Part natural history, part process, part adventure.",
-      "photos": [
-        { "id": "ff-1", "url": "", "caption": "" },
-        { "id": "ff-2", "url": "", "caption": "" }
-      ]
+      "description": "A project about the pursuit itself — tracking, locating, and documenting wildlife in the field.",
+      "photos": []
     },
     {
       "id": "pacific-northwest",
