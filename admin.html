@@ -642,6 +642,8 @@ async function loadContent() {
   }
 
   if (fetched) {
+    // Ensure all projects have a valid status
+    if (fetched.projects) fetched.projects.forEach(p => { if (!p.status) p.status = 'published'; });
     // Layer in any local base64 photos not yet published
     const saved = localStorage.getItem('jasper_content');
     const local = saved ? JSON.parse(saved) : null;
@@ -673,11 +675,11 @@ function getDefaultContent() {
       bio_full: 'I am a photographer and naturalist with more than a decade of experience capturing the natural world. I specialize in camera trapping — using remotely triggered cameras to capture images of elusive wildlife rarely observed otherwise.\n\nAvailable for editorial assignments, brand expeditions, and conservation documentation worldwide.'
     },
     projects: [
-      { id: 'camera-trapping', title: 'Camera trapping', status: 'published', cover: '', description: 'A decade of fieldwork using remotely triggered cameras to reveal elusive wildlife rarely seen by human eyes.', photos: [] },
-      { id: 'te-araroa', title: 'Te Araroa', status: 'published', cover: '', description: '1,800 miles on foot from Cape Reinga to Bluff — four months traversing the full length of New Zealand.', photos: [] },
-      { id: 'snakes-reptiles', title: 'Snakes & reptiles', status: 'published', cover: '', description: 'Close encounters with reptiles across the Americas.', photos: [] },
-      { id: 'find-and-film', title: 'Find & film', status: 'published', cover: '', description: 'A project about the pursuit itself — tracking, locating, and documenting wildlife in the field.', photos: [] },
-      { id: 'pacific-northwest', title: 'Pacific Northwest', status: 'draft', cover: '', description: '', photos: [] }
+      { id: 'camera-trapping', title: 'Camera Trapping', status: 'published', cover: '', description: 'A decade of fieldwork using remotely triggered cameras to reveal elusive wildlife rarely seen by human eyes.', photos: [] },
+      { id: 'te-araroa', title: 'Te Araroa', status: 'published', cover: '', description: '3,000 km on foot from Cape Reinga to Bluff — four months traversing the full length of New Zealand.', photos: [] },
+      { id: 'snakes-reptiles', title: 'Snakes & Reptiles', status: 'published', cover: '', description: 'Field herpetology across the Americas — from Pacific gopher snakes to cloud forest vipers.', photos: [] },
+      { id: 'find-film', title: 'Find & Film', status: 'published', cover: '', description: 'The naturalist's approach to wildlife photography — observation first, camera second.', photos: [] },
+      { id: 'pacific-northwest', title: 'Pacific Northwest', status: 'draft', cover: '', description: 'Old growth, coastline, and the creatures that inhabit the wet edge of the continent.', photos: [] }
     ]
   };
 }
@@ -700,12 +702,12 @@ function renderProjects() {
     card.innerHTML = `
       <div class="project-cover">
         ${project.cover ? `<img src="${project.cover}" alt="${project.title}">` : `<div class="project-cover-empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg><div>No cover photo</div></div>`}
-        <div class="project-status status-${project.status}">${project.status}</div>
+        <div class="project-status status-${project.status || 'draft'}">${project.status || 'draft'}</div>
         ${project.photos.length ? `<div class="photo-count">${project.photos.length} photo${project.photos.length !== 1 ? 's' : ''}</div>` : ''}
       </div>
       <div class="project-info">
         <div class="project-title">${project.title}</div>
-        <div class="project-subtitle">${project.photos.length ? project.photos.length + ' photos' : 'No photos yet'} · ${project.status}</div>
+        <div class="project-subtitle">${project.photos.length ? project.photos.length + ' photos' : 'No photos yet'} · ${project.status || 'draft'}</div>
       </div>
     `;
     grid.appendChild(card);
@@ -743,8 +745,8 @@ function openProjectEditor(projectId) {
         <div class="edit-panel-title">Editing: ${project.title}</div>
         <div class="edit-panel-actions">
           <select class="field-select" style="width:auto;" onchange="updateProjectStatus('${projectId}', this.value)">
-            <option value="published" ${project.status === 'published' ? 'selected' : ''}>Published</option>
-            <option value="draft" ${project.status === 'draft' ? 'selected' : ''}>Draft (hidden)</option>
+            <option value="published" ${(project.status || 'draft') === 'published' ? 'selected' : ''}>Published</option>
+            <option value="draft" ${(project.status || 'draft') === 'draft' ? 'selected' : ''}>Draft (hidden)</option>
           </select>
           <button class="btn btn-danger" onclick="confirmDeleteProject('${projectId}')">Remove</button>
         </div>
@@ -828,7 +830,7 @@ function handlePhotoUpload(projectId, files) {
   Array.from(files).forEach(file => {
     const reader = new FileReader();
     reader.onload = (e) => {
-      project.photos.push({ id: 'photo-' + Date.now() + '-' + loaded, url: e.target.result, caption: '', filename: file.name });
+      project.photos.push({ id: 'photo-' + Date.now() + '-' + loaded + '-' + Math.random().toString(36).slice(2,7), url: e.target.result, caption: '', filename: file.name });
       if (!project.cover) project.cover = e.target.result;
       loaded++;
       saveLocal();
