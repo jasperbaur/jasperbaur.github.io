@@ -227,24 +227,28 @@ async function loadContent() {
   document.getElementById('nav-logo').textContent = d.site.name;
 
   // Hero
-  const hi = d.hero;
-  document.getElementById('hero-img').src = hi.image.src;
-  document.getElementById('hero-img').alt = hi.image.alt;
-  document.getElementById('hero-overline').textContent = hi.overline;
+  const hi = d.hero || {};
+  if (hi.image) {
+    document.getElementById('hero-img').src = hi.image.src || '';
+    document.getElementById('hero-img').alt = hi.image.alt || '';
+  }
+  document.getElementById('hero-overline').textContent = hi.overline || '';
   document.getElementById('hero-title').innerHTML =
-    `${hi.titleLine1}<br>${hi.titleLine2}<br><span class="ital">${hi.titleItalic}</span>`;
-  document.getElementById('hero-intro').textContent = hi.intro;
-  document.getElementById('hero-credit').textContent = hi.credit;
-  document.getElementById('hero-ctas').innerHTML =
-    `<a href="${hi.ctaPrimary.href}" class="btn-white">${hi.ctaPrimary.label}</a>` +
-    `<a href="${hi.ctaSecondary.href}" class="btn-arrow">${hi.ctaSecondary.label} →</a>`;
+    `${hi.titleLine1||''}<br>${hi.titleLine2||''}<br><span class="ital">${hi.titleItalic||''}</span>`;
+  document.getElementById('hero-intro').textContent = hi.intro || '';
+  document.getElementById('hero-credit').textContent = hi.credit || '';
+  if (hi.ctaPrimary && hi.ctaSecondary) {
+    document.getElementById('hero-ctas').innerHTML =
+      `<a href="${hi.ctaPrimary.href}" class="btn-white">${hi.ctaPrimary.label}</a>` +
+      `<a href="${hi.ctaSecondary.href}" class="btn-arrow">${hi.ctaSecondary.label} →</a>`;
+  }
 
   // Statement
-  const st = d.statement;
-  document.getElementById('stmt-label').textContent = st.label;
-  document.getElementById('stmt-pull').textContent = st.pull;
+  const st = d.statement || {};
+  document.getElementById('stmt-label').textContent = st.label || '';
+  document.getElementById('stmt-pull').textContent = st.pull || '';
   document.getElementById('stmt-paras').innerHTML =
-    st.paragraphs.map(p => `<p>${p}</p>`).join('');
+    (st.paragraphs || []).map(p => `<p>${p}</p>`).join('');
 
   // Gallery — built from projects (cover photo + title), falls back to d.gallery
   const gg = document.getElementById('gallery-grid');
@@ -269,24 +273,26 @@ async function loadContent() {
   });
 
   // About
-  const ab = d.about;
-  document.getElementById('about-img').src = ab.image.src;
-  document.getElementById('about-img').alt = ab.image.alt;
-
-  // Headline: split on last line for emphasis
-  const lines = ab.headline.split('\n');
-  const lastLine = lines.pop();
-  document.getElementById('about-hed').innerHTML =
-    lines.map(l => l + '<br>').join('') + `<em>${lastLine}</em>`;
-
+  const ab = d.about || {};
+  if (ab.image) {
+    document.getElementById('about-img').src = ab.image.src || '';
+    document.getElementById('about-img').alt = ab.image.alt || '';
+  }
+  if (ab.headline) {
+    const lines = ab.headline.split('\n');
+    const lastLine = lines.pop();
+    document.getElementById('about-hed').innerHTML =
+      lines.map(l => l + '<br>').join('') + `<em>${lastLine}</em>`;
+  }
   document.getElementById('about-paras').innerHTML =
-    ab.paragraphs.map(p => `<p class="about-p">${p}</p>`).join('');
+    (ab.paragraphs || []).map(p => `<p class="about-p">${p}</p>`).join('');
   document.getElementById('skill-row').innerHTML =
-    ab.skills.map(s => `<span class="stag">${s}</span>`).join('');
+    (ab.skills || []).map(s => `<span class="stag">${s}</span>`).join('');
 
   // Quote
-  document.getElementById('quote-text').textContent = d.quote.text;
-  document.getElementById('quote-cite').textContent = d.quote.attribution;
+  const qt = d.quote || {};
+  document.getElementById('quote-text').textContent = qt.text || '';
+  document.getElementById('quote-cite').textContent = qt.attribution || '';
 
   // Field work
   const fl = document.getElementById('field-list');
@@ -300,14 +306,14 @@ async function loadContent() {
   });
 
   // Collaborate
-  const co = d.collaborate;
-  document.getElementById('collab-overline').textContent = co.overline;
+  const co = d.collaborate || {};
+  document.getElementById('collab-overline').textContent = co.overline || '';
   document.getElementById('collab-hed').innerHTML =
-    `${co.headline}<br><em>${co.headlineEmphasis}</em>`;
-  document.getElementById('collab-sub').textContent = co.subtext;
+    `${co.headline||''}<br><em>${co.headlineEmphasis||''}</em>`;
+  document.getElementById('collab-sub').textContent = co.subtext || '';
 
   const og = document.getElementById('offer-grid');
-  co.offers.forEach(o => {
+  (co.offers || []).forEach(o => {
     og.innerHTML += `
       <div class="offer-cell">
         <div class="offer-who">${o.audience}</div>
@@ -317,10 +323,11 @@ async function loadContent() {
   });
 
   const tr = document.getElementById('target-row');
-  tr.innerHTML = `<span class="ti">Seeking partnerships with</span>` +
-    co.seekingPartners.map((b, i) =>
-      `<span class="tn">${b}</span>` + (i < co.seekingPartners.length - 1 ? '<span class="td">·</span>' : '')
-    ).join('');
+  const partners = co.seekingPartners || [];
+  tr.innerHTML = partners.length ? `<span class="ti">Seeking partnerships with</span>` +
+    partners.map((b, i) =>
+      `<span class="tn">${b}</span>` + (i < partners.length - 1 ? '<span class="td">·</span>' : '')
+    ).join('') : '';
 
   const site = d.site;
   document.getElementById('cta-row').innerHTML =
