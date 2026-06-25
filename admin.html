@@ -3,701 +3,415 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Jasper Baur — Site editor</title>
+<title>Jasper Baur — Site Editor</title>
 <style>
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --ink:#100f0e;--paper:#f6f4f0;--warm:#faf8f4;
+  --gray:#888;--light:#e8e5e0;--success:#2d7a4f;--danger:#c0392b;
+  --serif:'Georgia',serif;--sans:system-ui,sans-serif;
+}
+body{font-family:var(--sans);background:#f0ede8;color:var(--ink);min-height:100vh}
 
-  :root {
-    --black: #0f0f0f;
-    --white: #ffffff;
-    --gray-100: #f5f5f3;
-    --gray-200: #e8e8e5;
-    --gray-400: #b0afab;
-    --gray-600: #6b6a67;
-    --gray-800: #2c2c2a;
-    --accent: #0f0f0f;
-    --danger: #c0392b;
-    --success: #27ae60;
-    --warning: #e67e22;
-    --radius: 8px;
-    --radius-lg: 12px;
-    --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  }
+/* LOGIN */
+.login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center}
+.login-card{background:#fff;border-radius:12px;padding:40px;width:360px;box-shadow:0 2px 24px rgba(0,0,0,.08)}
+.login-card h1{font-size:20px;font-weight:600;margin-bottom:4px}
+.login-card p{color:var(--gray);font-size:13px;margin-bottom:28px}
+.login-card label{display:block;font-size:12px;font-weight:500;margin-bottom:6px;letter-spacing:.04em}
+.login-card input{width:100%;padding:10px 12px;border:1px solid var(--light);border-radius:6px;font-size:14px;outline:none;margin-bottom:16px}
+.login-card input:focus{border-color:var(--ink)}
+.btn-primary{width:100%;background:var(--ink);color:#fff;border:none;padding:12px;border-radius:6px;font-size:14px;font-weight:500;cursor:pointer}
+.btn-primary:hover{opacity:.85}
+.login-error{color:var(--danger);font-size:12px;margin-top:8px;display:none}
 
-  body {
-    font-family: var(--font);
-    background: var(--gray-100);
-    color: var(--black);
-    min-height: 100vh;
-    font-size: 14px;
-    line-height: 1.5;
-  }
+/* APP SHELL */
+.app{display:none;min-height:100vh;flex-direction:column}
+.topbar{background:#fff;border-bottom:1px solid var(--light);padding:0 24px;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+.topbar-left{display:flex;align-items:center;gap:12px}
+.topbar-title{font-weight:600;font-size:15px}
+.topbar-title span{color:var(--gray);font-weight:400}
+.status-dot{width:7px;height:7px;border-radius:50%;background:var(--success)}
+.status-dot.loading{background:#f0a500}
+.status-text{font-size:12px;color:var(--gray)}
+.topbar-right{display:flex;gap:10px;align-items:center}
+.btn-preview{background:none;border:1px solid var(--light);padding:7px 16px;border-radius:6px;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:6px}
+.btn-preview:hover{border-color:var(--ink)}
+.btn-publish{background:var(--ink);color:#fff;border:none;padding:8px 18px;border-radius:6px;font-size:13px;font-weight:500;cursor:pointer}
+.btn-publish:hover{opacity:.85}
+.btn-publish:disabled{opacity:.5;cursor:not-allowed}
 
-  /* TOPBAR */
-  .topbar {
-    background: var(--white);
-    border-bottom: 1px solid var(--gray-200);
-    padding: 0 24px;
-    height: 56px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    position: sticky;
-    top: 0;
-    z-index: 100;
-  }
-  .topbar-left { display: flex; align-items: center; gap: 16px; }
-  .site-name { font-size: 15px; font-weight: 600; letter-spacing: -0.01em; }
-  .site-name span { font-weight: 400; color: var(--gray-600); }
-  .save-status { font-size: 12px; color: var(--gray-400); display: flex; align-items: center; gap: 5px; }
-  .save-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--gray-400); }
-  .save-dot.saved { background: var(--success); }
-  .save-dot.unsaved { background: var(--warning); }
-  .topbar-right { display: flex; gap: 10px; align-items: center; }
-  .btn { padding: 8px 16px; border-radius: var(--radius); font-size: 13px; font-weight: 500; cursor: pointer; border: 1px solid var(--gray-200); background: var(--white); color: var(--black); transition: all 0.15s; display: inline-flex; align-items: center; gap: 6px; }
-  .btn:hover { background: var(--gray-100); }
-  .btn-primary { background: var(--black); color: var(--white); border-color: var(--black); }
-  .btn-primary:hover { background: var(--gray-800); }
-  .btn-primary:disabled { background: var(--gray-400); border-color: var(--gray-400); cursor: not-allowed; }
-  .btn-danger { color: var(--danger); border-color: var(--danger); }
-  .btn-danger:hover { background: #fdf2f2; }
+.body{display:flex;flex:1}
+.sidebar{width:220px;background:#fff;border-right:1px solid var(--light);padding:20px 0;flex-shrink:0}
+.nav-section{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--gray);padding:0 16px;margin-bottom:6px;margin-top:20px}
+.nav-section:first-child{margin-top:0}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 16px;font-size:13px;cursor:pointer;color:#444;border-left:2px solid transparent}
+.nav-item:hover{background:#f8f7f5}
+.nav-item.active{background:#f0ede8;color:var(--ink);font-weight:500;border-left-color:var(--ink)}
+.nav-item svg{width:15px;height:15px;opacity:.5}
 
-  /* LAYOUT */
-  .layout { display: flex; min-height: calc(100vh - 56px); }
+.main{flex:1;padding:32px;overflow-y:auto;max-width:900px}
+.section{display:none}
+.section.active{display:block}
+.section-title{font-size:22px;font-weight:600;margin-bottom:6px}
+.section-desc{color:var(--gray);font-size:13px;margin-bottom:28px}
 
-  /* SIDEBAR */
-  .sidebar {
-    width: 220px;
-    background: var(--white);
-    border-right: 1px solid var(--gray-200);
-    padding: 20px 0;
-    flex-shrink: 0;
-    position: sticky;
-    top: 56px;
-    height: calc(100vh - 56px);
-    overflow-y: auto;
-  }
-  .nav-section-label {
-    font-size: 10px;
-    font-weight: 600;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: var(--gray-400);
-    padding: 16px 20px 6px;
-  }
-  .nav-item {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 9px 20px;
-    font-size: 13px;
-    color: var(--gray-600);
-    cursor: pointer;
-    transition: all 0.1s;
-    border-left: 2px solid transparent;
-    user-select: none;
-  }
-  .nav-item:hover { background: var(--gray-100); color: var(--black); }
-  .nav-item.active { color: var(--black); font-weight: 500; background: var(--gray-100); border-left-color: var(--black); }
-  .nav-item svg { width: 16px; height: 16px; flex-shrink: 0; }
-  .nav-badge { margin-left: auto; font-size: 11px; background: var(--gray-200); color: var(--gray-600); border-radius: 20px; padding: 1px 7px; }
+/* PROJECTS GRID */
+.projects-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.project-card{background:#fff;border-radius:10px;overflow:hidden;cursor:pointer;border:2px solid transparent;transition:border-color .15s}
+.project-card:hover{border-color:#ddd}
+.project-card.active{border-color:var(--ink)}
+.project-cover{height:160px;background:#e8e5e0;position:relative;overflow:hidden}
+.project-cover img{width:100%;height:100%;object-fit:cover}
+.project-cover-empty{width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;color:#bbb}
+.project-cover-empty svg{width:28px;height:28px}
+.project-cover-empty span{font-size:12px}
+.project-badge{position:absolute;top:10px;right:10px;font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;padding:3px 8px;border-radius:20px}
+.badge-published{background:rgba(45,122,79,.15);color:#1a7a40}
+.badge-draft{background:rgba(180,100,30,.15);color:#b5601a}
+.photo-count{position:absolute;bottom:10px;left:10px;background:rgba(0,0,0,.6);color:#fff;font-size:11px;padding:3px 8px;border-radius:20px}
+.project-info{padding:14px}
+.project-name{font-weight:600;font-size:14px;margin-bottom:2px}
+.project-meta{font-size:12px;color:var(--gray)}
+.add-project-card{background:#fff;border-radius:10px;border:2px dashed var(--light);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;cursor:pointer;min-height:220px;color:var(--gray);transition:border-color .15s}
+.add-project-card:hover{border-color:#aaa;color:#666}
+.add-project-card svg{width:28px;height:28px}
+.add-project-card span{font-size:13px}
 
-  /* MAIN */
-  .main { flex: 1; padding: 32px; max-width: 860px; }
+/* EDIT PANEL */
+.edit-panel{background:#fff;border-radius:10px;padding:24px;margin-top:20px;display:none}
+.edit-panel.open{display:block}
+.edit-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+.edit-header h3{font-size:16px;font-weight:600}
+.edit-header-right{display:flex;gap:8px;align-items:center}
+.field-group{margin-bottom:16px}
+.field-label{font-size:12px;font-weight:500;margin-bottom:6px;display:block;color:#555}
+.field-input{width:100%;padding:9px 12px;border:1px solid var(--light);border-radius:6px;font-size:13px;outline:none;font-family:inherit}
+.field-input:focus{border-color:var(--ink)}
+.field-textarea{width:100%;padding:9px 12px;border:1px solid var(--light);border-radius:6px;font-size:13px;outline:none;font-family:inherit;resize:vertical;min-height:80px}
+.field-textarea:focus{border-color:var(--ink)}
+.field-select{padding:8px 12px;border:1px solid var(--light);border-radius:6px;font-size:13px;outline:none;background:#fff}
+.btn-danger{background:none;border:1px solid var(--danger);color:var(--danger);padding:7px 14px;border-radius:6px;font-size:13px;cursor:pointer}
+.btn-danger:hover{background:var(--danger);color:#fff}
 
-  /* SECTIONS */
-  .section { display: none; }
-  .section.active { display: block; }
-  .section-header { margin-bottom: 24px; }
-  .section-title { font-size: 20px; font-weight: 600; letter-spacing: -0.02em; margin-bottom: 4px; }
-  .section-desc { font-size: 13px; color: var(--gray-600); }
+/* PHOTOS */
+.photos-label{font-size:12px;font-weight:500;color:#555;margin-bottom:4px}
+.photos-hint{font-size:11px;color:var(--gray);margin-bottom:12px}
+.photo-strip{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:12px}
+.photo-item{position:relative;width:100px}
+.photo-thumb{width:100px;height:80px;border-radius:6px;overflow:hidden;background:#e8e5e0;border:1px solid var(--light)}
+.photo-thumb img{width:100%;height:100%;object-fit:cover}
+.photo-thumb-empty{width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:#bbb}
+.photo-remove{position:absolute;top:4px;right:4px;width:20px;height:20px;background:rgba(0,0,0,.6);color:#fff;border:none;border-radius:50%;font-size:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .15s}
+.photo-item:hover .photo-remove{opacity:1}
+.photo-caption{width:100%;margin-top:4px;padding:4px 6px;border:1px solid var(--light);border-radius:4px;font-size:11px;outline:none}
+.photo-caption:focus{border-color:var(--ink)}
+.add-photo-btn{width:100px;height:80px;border:2px dashed var(--light);border-radius:6px;background:none;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;color:#bbb;transition:border-color .15s}
+.add-photo-btn:hover{border-color:#aaa;color:#888}
+.add-photo-btn svg{width:20px;height:20px}
+.add-photo-btn span{font-size:11px}
 
-  /* PROJECTS GRID */
-  .projects-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px; margin-bottom: 32px; }
-  .project-card {
-    background: var(--white);
-    border: 1px solid var(--gray-200);
-    border-radius: var(--radius-lg);
-    overflow: hidden;
-    cursor: pointer;
-    transition: all 0.15s;
-  }
-  .project-card:hover { border-color: var(--gray-600); transform: translateY(-1px); }
-  .project-card.editing { border: 2px solid var(--black); }
-  .project-cover {
-    height: 120px;
-    background: var(--gray-200);
-    position: relative;
-    overflow: hidden;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-  .project-cover img { width: 100%; height: 100%; object-fit: cover; }
-  .project-cover-empty { color: var(--gray-400); font-size: 12px; text-align: center; }
-  .project-cover-empty svg { width: 28px; height: 28px; margin-bottom: 4px; display: block; margin-inline: auto; }
-  .project-status {
-    position: absolute;
-    top: 8px;
-    right: 8px;
-    font-size: 10px;
-    font-weight: 600;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    padding: 3px 8px;
-    border-radius: 20px;
-  }
-  .status-published { background: rgba(39,174,96,0.15); color: #1a7a40; }
-  .status-draft { background: rgba(230,126,34,0.15); color: #b5601a; }
-  .photo-count {
-    position: absolute;
-    bottom: 8px;
-    left: 8px;
-    font-size: 11px;
-    background: rgba(0,0,0,0.55);
-    color: white;
-    padding: 2px 8px;
-    border-radius: 20px;
-  }
-  .project-info { padding: 12px 14px; }
-  .project-title { font-size: 14px; font-weight: 600; margin-bottom: 2px; }
-  .project-subtitle { font-size: 12px; color: var(--gray-600); }
-  .add-project-card {
-    background: transparent;
-    border: 1.5px dashed var(--gray-200);
-    border-radius: var(--radius-lg);
-    height: 160px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    cursor: pointer;
-    color: var(--gray-400);
-    font-size: 13px;
-    transition: all 0.15s;
-  }
-  .add-project-card:hover { border-color: var(--gray-600); color: var(--black); background: var(--white); }
-  .add-project-card svg { width: 24px; height: 24px; }
+/* ABOUT / CONTACT */
+.form-section{background:#fff;border-radius:10px;padding:24px;margin-bottom:16px}
+.form-section h3{font-size:15px;font-weight:600;margin-bottom:16px}
+.btn-save{background:var(--ink);color:#fff;border:none;padding:9px 18px;border-radius:6px;font-size:13px;cursor:pointer;margin-top:8px}
+.btn-save:hover{opacity:.85}
 
-  /* EDIT PANEL */
-  .edit-panel {
-    background: var(--white);
-    border: 1px solid var(--gray-200);
-    border-radius: var(--radius-lg);
-    padding: 24px;
-    margin-top: 8px;
-  }
-  .edit-panel-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
-  .edit-panel-title { font-size: 16px; font-weight: 600; }
-  .edit-panel-actions { display: flex; gap: 8px; }
+/* PUBLISH */
+.publish-section{background:#fff;border-radius:10px;padding:24px;margin-bottom:16px}
+.publish-section h3{font-size:15px;font-weight:600;margin-bottom:6px}
+.publish-section p{font-size:13px;color:var(--gray);margin-bottom:16px}
+.steps{display:flex;flex-direction:column;gap:10px;margin-top:16px}
+.step{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:#f8f7f5;border-radius:6px}
+.step-label{font-size:13px}
+.step-status{font-size:12px;font-weight:500;color:var(--gray)}
+.step-status.done{color:var(--success)}
+.step-status.error{color:var(--danger)}
 
-  /* FORM */
-  .field { margin-bottom: 20px; }
-  .field-label { font-size: 12px; font-weight: 500; color: var(--gray-600); margin-bottom: 6px; letter-spacing: 0.02em; }
-  .field-input, .field-textarea, .field-select {
-    width: 100%;
-    border: 1px solid var(--gray-200);
-    border-radius: var(--radius);
-    padding: 9px 12px;
-    font-size: 13px;
-    font-family: var(--font);
-    color: var(--black);
-    background: var(--white);
-    transition: border-color 0.15s;
-    outline: none;
-  }
-  .field-input:focus, .field-textarea:focus, .field-select:focus { border-color: var(--black); }
-  .field-textarea { resize: vertical; min-height: 80px; line-height: 1.6; }
-  .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+/* TOAST */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--ink);color:#fff;padding:10px 20px;border-radius:6px;font-size:13px;opacity:0;transition:all .3s;z-index:999;pointer-events:none}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.toast.error{background:var(--danger)}
 
-  /* PHOTO STRIP */
-  .photo-strip { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 8px; align-items: flex-start; }
-  .photo-item {
-    width: 80px;
-    position: relative;
-    cursor: grab;
-  }
-  .photo-item:active { cursor: grabbing; }
-  .photo-item.dragging { opacity: 0.4; }
-  .photo-thumb {
-    width: 80px;
-    height: 80px;
-    background: var(--gray-200);
-    border-radius: var(--radius);
-    border: 1px solid var(--gray-200);
-    overflow: hidden;
-    position: relative;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-  .photo-thumb img { width: 100%; height: 100%; object-fit: cover; }
-  .photo-remove {
-    position: absolute;
-    top: 4px;
-    right: 4px;
-    width: 20px;
-    height: 20px;
-    background: rgba(0,0,0,0.7);
-    color: white;
-    border: none;
-    border-radius: 50%;
-    font-size: 11px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    opacity: 0;
-    transition: opacity 0.15s;
-  }
-  .photo-thumb:hover .photo-remove { opacity: 1; }
-  .photo-caption-input {
-    width: 80px;
-    border: 1px solid var(--gray-200);
-    border-radius: 4px;
-    padding: 3px 6px;
-    font-size: 10px;
-    font-family: var(--font);
-    margin-top: 4px;
-    outline: none;
-    color: var(--black);
-  }
-  .photo-caption-input:focus { border-color: var(--black); }
-  .add-photo-btn {
-    width: 80px;
-    height: 80px;
-    border: 1.5px dashed var(--gray-200);
-    border-radius: var(--radius);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 4px;
-    cursor: pointer;
-    color: var(--gray-400);
-    font-size: 11px;
-    background: transparent;
-    transition: all 0.15s;
-  }
-  .add-photo-btn:hover { border-color: var(--black); color: var(--black); background: var(--gray-100); }
-  .add-photo-btn svg { width: 20px; height: 20px; }
-  .drag-hint { font-size: 11px; color: var(--gray-400); margin-bottom: 12px; }
+/* MODAL */
+.modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:200;display:none;align-items:center;justify-content:center}
+.modal-backdrop.open{display:flex}
+.modal{background:#fff;border-radius:12px;padding:28px;width:360px}
+.modal h3{font-size:16px;font-weight:600;margin-bottom:8px}
+.modal p{font-size:13px;color:var(--gray);margin-bottom:20px}
+.modal-btns{display:flex;gap:8px;justify-content:flex-end}
+.btn-cancel{background:none;border:1px solid var(--light);padding:8px 16px;border-radius:6px;font-size:13px;cursor:pointer}
+.btn-cancel:hover{border-color:#aaa}
 
-  /* ABOUT SECTION */
-  .about-avatar {
-    width: 80px;
-    height: 80px;
-    border-radius: 50%;
-    background: var(--gray-200);
-    overflow: hidden;
-    margin-bottom: 16px;
-    cursor: pointer;
-    position: relative;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border: 2px dashed var(--gray-200);
-    transition: border-color 0.15s;
-  }
-  .about-avatar:hover { border-color: var(--black); }
-  .about-avatar img { width: 100%; height: 100%; object-fit: cover; }
-  .about-avatar-hint { font-size: 10px; color: var(--gray-400); text-align: center; }
-
-  /* TOAST */
-  .toast {
-    position: fixed;
-    bottom: 24px;
-    right: 24px;
-    background: var(--black);
-    color: var(--white);
-    padding: 12px 20px;
-    border-radius: var(--radius);
-    font-size: 13px;
-    z-index: 999;
-    opacity: 0;
-    transform: translateY(8px);
-    transition: all 0.2s;
-    pointer-events: none;
-  }
-  .toast.show { opacity: 1; transform: translateY(0); }
-  .toast.error { background: var(--danger); }
-
-  /* MODAL */
-  .modal-bg {
-    display: none;
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.5);
-    z-index: 200;
-    align-items: center;
-    justify-content: center;
-  }
-  .modal-bg.open { display: flex; }
-  .modal {
-    background: var(--white);
-    border-radius: var(--radius-lg);
-    padding: 28px;
-    width: 400px;
-    max-width: 90vw;
-  }
-  .modal-title { font-size: 16px; font-weight: 600; margin-bottom: 8px; }
-  .modal-desc { font-size: 13px; color: var(--gray-600); margin-bottom: 20px; }
-  .modal-actions { display: flex; gap: 10px; justify-content: flex-end; }
-
-  /* PUBLISH PANEL */
-  .publish-steps { margin-top: 20px; }
-  .publish-step { display: flex; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--gray-200); }
-  .publish-step:last-child { border-bottom: none; }
-  .step-num { width: 24px; height: 24px; border-radius: 50%; background: var(--black); color: var(--white); font-size: 11px; font-weight: 600; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-  .step-info { flex: 1; }
-  .step-title { font-size: 13px; font-weight: 500; margin-bottom: 2px; }
-  .step-desc { font-size: 12px; color: var(--gray-600); }
-  .step-status { font-size: 12px; font-weight: 500; }
-  .step-status.done { color: var(--success); }
-  .step-status.pending { color: var(--gray-400); }
-  .step-status.error { color: var(--danger); }
-
-  /* GITHUB CONFIG */
-  .config-box { background: var(--gray-100); border-radius: var(--radius); padding: 16px; margin-bottom: 20px; }
-  .config-box p { font-size: 12px; color: var(--gray-600); margin-bottom: 12px; }
-
-  /* HIDDEN FILE INPUT */
-  #fileInput { display: none; }
-
-  /* LOADING */
-  .spinner { width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.3); border-top-color: white; border-radius: 50%; animation: spin 0.6s linear infinite; display: inline-block; }
-  @keyframes spin { to { transform: rotate(360deg); } }
-
-  /* EMPTY STATE */
-  .empty-state { text-align: center; padding: 40px 20px; color: var(--gray-400); }
-  .empty-state svg { width: 40px; height: 40px; margin-bottom: 12px; }
-  .empty-state p { font-size: 13px; }
-
-  /* LOGIN */
-  .login-screen {
-    min-height: 100vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: var(--gray-100);
-  }
-  .login-card {
-    background: var(--white);
-    border: 1px solid var(--gray-200);
-    border-radius: var(--radius-lg);
-    padding: 40px;
-    width: 360px;
-    text-align: center;
-  }
-  .login-name { font-size: 22px; font-weight: 600; letter-spacing: -0.02em; margin-bottom: 4px; }
-  .login-sub { font-size: 13px; color: var(--gray-600); margin-bottom: 28px; }
-  .login-field { text-align: left; margin-bottom: 16px; }
+/* Loading overlay */
+.loading-overlay{position:fixed;inset:0;background:rgba(240,237,232,.8);display:flex;align-items:center;justify-content:center;z-index:300;display:none}
+.loading-overlay.show{display:flex}
+.loading-spinner{text-align:center}
+.spinner{width:36px;height:36px;border:3px solid var(--light);border-top-color:var(--ink);border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 12px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-spinner p{font-size:13px;color:var(--gray)}
 </style>
 </head>
 <body>
 
-<!-- LOGIN SCREEN -->
-<div id="loginScreen" class="login-screen">
+<!-- LOGIN -->
+<div class="login-wrap" id="loginWrap">
   <div class="login-card">
-    <div class="login-name">Jasper Baur</div>
-    <div class="login-sub">Site editor — sign in to continue</div>
-    <div class="login-field">
-      <div class="field-label">Password</div>
-      <input class="field-input" type="password" id="passwordInput" placeholder="jasper2024" autocomplete="off" autocorrect="off" autocapitalize="off">
-    </div>
-    <button class="btn btn-primary" style="width:100%;justify-content:center;" onclick="login()">Sign in</button>
-    <div id="loginError" style="color:var(--danger);font-size:12px;margin-top:10px;display:none;">Incorrect password. Try again.</div>
+    <h1>Jasper Baur</h1>
+    <p>Site editor — sign in to continue</p>
+    <label>Password</label>
+    <input type="password" id="pwInput" placeholder="Enter password" autocomplete="off">
+    <button class="btn-primary" id="loginBtn">Sign in</button>
+    <div class="login-error" id="loginError">Incorrect password. Try again.</div>
   </div>
 </div>
 
-<!-- MAIN APP (hidden until login) -->
-<div id="appScreen" style="display:none;">
-
+<!-- APP -->
+<div class="app" id="app">
   <div class="topbar">
     <div class="topbar-left">
-      <div class="site-name">Jasper Baur <span>/ Site editor</span></div>
-      <div class="save-status">
-        <div class="save-dot" id="saveDot"></div>
-        <span id="saveStatusText">All changes saved</span>
-      </div>
+      <div class="topbar-title">Jasper Baur <span>/ Site editor</span></div>
+      <div class="status-dot loading" id="statusDot"></div>
+      <div class="status-text" id="statusText">Loading...</div>
     </div>
     <div class="topbar-right">
-      <button class="btn" onclick="previewSite()">
+      <button class="btn-preview" onclick="previewSite()">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
         Preview site
       </button>
-      <button class="btn btn-primary" id="publishBtn" onclick="publishSite()">
-        Publish changes
-      </button>
+      <button class="btn-publish" id="publishBtn" onclick="publishSite()">Publish changes</button>
     </div>
   </div>
 
-  <div class="layout">
+  <div class="body">
     <div class="sidebar">
-      <div class="nav-section-label">Content</div>
-      <div class="nav-item active" onclick="showSection('projects', this)">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+      <div class="nav-section">Content</div>
+      <div class="nav-item active" onclick="showSection('projects',this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
         Projects
       </div>
-      <div class="nav-item" onclick="showSection('about', this)">
+      <div class="nav-item" onclick="showSection('about',this)">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
         About & bio
       </div>
-      <div class="nav-item" onclick="showSection('contact', this)">
+      <div class="nav-item" onclick="showSection('contact',this)">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
         Contact info
       </div>
-      <div class="nav-section-label">Site</div>
-      <div class="nav-item" onclick="showSection('publish', this)">
+      <div class="nav-section">Site</div>
+      <div class="nav-item" onclick="showSection('publish',this)">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/></svg>
         Publish & settings
       </div>
     </div>
 
     <div class="main">
-
-      <!-- PROJECTS SECTION -->
-      <div id="section-projects" class="section active">
-        <div class="section-header">
-          <div class="section-title">Projects</div>
-          <div class="section-desc">Click any project to edit its photos and description. Changes are saved automatically.</div>
-        </div>
+      <!-- PROJECTS -->
+      <div class="section active" id="section-projects">
+        <div class="section-title">Projects</div>
+        <div class="section-desc">Click a project to edit photos and description.</div>
         <div class="projects-grid" id="projectsGrid"></div>
-        <div id="editPanel" style="display:none;"></div>
+        <div class="edit-panel" id="editPanel"></div>
       </div>
 
-      <!-- ABOUT SECTION -->
-      <div id="section-about" class="section">
-        <div class="section-header">
-          <div class="section-title">About & bio</div>
-          <div class="section-desc">This text appears in the About section of your website.</div>
+      <!-- ABOUT -->
+      <div class="section" id="section-about">
+        <div class="section-title">About & bio</div>
+        <div class="section-desc">This appears in the About section of your website.</div>
+        <div class="form-section">
+          <h3>Headline</h3>
+          <div class="field-group">
+            <label class="field-label">Tagline (shown large on the page)</label>
+            <input class="field-input" id="aboutTagline" type="text">
+          </div>
         </div>
-        <div class="edit-panel">
-          <div class="field">
-            <div class="field-label">Page headline</div>
-            <input class="field-input" id="aboutTagline" type="text" placeholder="Your headline" oninput="markUnsaved()">
+        <div class="form-section">
+          <h3>Bio</h3>
+          <div class="field-group">
+            <label class="field-label">Short bio</label>
+            <textarea class="field-textarea" id="aboutShort" rows="3"></textarea>
           </div>
-          <div class="field">
-            <div class="field-label">Short bio <span style="color:var(--gray-400);font-weight:400;">(shown in header)</span></div>
-            <textarea class="field-textarea" id="aboutShort" rows="2" placeholder="One or two sentences..." oninput="markUnsaved()"></textarea>
+          <div class="field-group">
+            <label class="field-label">Full bio</label>
+            <textarea class="field-textarea" id="aboutFull" rows="6"></textarea>
           </div>
-          <div class="field">
-            <div class="field-label">Full bio <span style="color:var(--gray-400);font-weight:400;">(shown in About section)</span></div>
-            <textarea class="field-textarea" id="aboutFull" rows="6" placeholder="Your full bio..." oninput="markUnsaved()"></textarea>
-          </div>
-          <button class="btn btn-primary" onclick="saveAbout()">Save changes</button>
-        </div>
-      </div>
-
-      <!-- CONTACT SECTION -->
-      <div id="section-contact" class="section">
-        <div class="section-header">
-          <div class="section-title">Contact info</div>
-          <div class="section-desc">How people reach you. Only fill in what you want shown publicly.</div>
-        </div>
-        <div class="edit-panel">
-          <div class="field-row">
-            <div class="field">
-              <div class="field-label">Email address</div>
-              <input class="field-input" id="contactEmail" type="email" placeholder="jasper@example.com" oninput="markUnsaved()">
-            </div>
-            <div class="field">
-              <div class="field-label">Instagram URL</div>
-              <input class="field-input" id="contactInstagram" type="url" placeholder="https://instagram.com/..." oninput="markUnsaved()">
-            </div>
-          </div>
-          <button class="btn btn-primary" onclick="saveContact()">Save changes</button>
+          <button class="btn-save" onclick="saveAbout()">Save about</button>
         </div>
       </div>
 
-      <!-- PUBLISH SECTION -->
-      <div id="section-publish" class="section">
-        <div class="section-header">
-          <div class="section-title">Publish & settings</div>
-          <div class="section-desc">Connect your GitHub account to publish changes directly to your live website.</div>
-        </div>
-        <div class="edit-panel">
-          <div class="config-box">
-            <p>Paste your GitHub access token below. You only need to do this once.</p>
-            <div class="field">
-              <div class="field-label">GitHub personal access token <a href="https://github.com/settings/tokens/new?scopes=repo&description=Jasper+site+editor" target="_blank" style="color:var(--black);font-size:11px;margin-left:6px;">Get new token ↗</a></div>
-              <input class="field-input" id="ghToken" type="text" placeholder="ghp_..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
-            </div>
-            <input type="hidden" id="ghUsername" value="jasperbaur">
-            <input type="hidden" id="ghRepo" value="jasperbaur.github.io">
-            <button class="btn" onclick="saveGithubConfig()">Save connection settings</button>
-            <span id="ghConfigStatus" style="font-size:12px;margin-left:10px;"></span>
+      <!-- CONTACT -->
+      <div class="section" id="section-contact">
+        <div class="section-title">Contact info</div>
+        <div class="section-desc">How people can reach you.</div>
+        <div class="form-section">
+          <div class="field-group">
+            <label class="field-label">Email address</label>
+            <input class="field-input" id="contactEmail" type="email">
           </div>
-
-          <div class="publish-steps">
-            <div class="publish-step">
-              <div class="step-num">1</div>
-              <div class="step-info">
-                <div class="step-title">GitHub connected</div>
-                <div class="step-desc">Your editor can push changes to GitHub</div>
-              </div>
-              <div class="step-status" id="stepGh">—</div>
-            </div>
-            <div class="publish-step">
-              <div class="step-num">2</div>
-              <div class="step-info">
-                <div class="step-title">Changes ready</div>
-                <div class="step-desc">Content saved and ready to publish</div>
-              </div>
-              <div class="step-status" id="stepChanges">—</div>
-            </div>
-            <div class="publish-step">
-              <div class="step-num">3</div>
-              <div class="step-info">
-                <div class="step-title">Live on your website</div>
-                <div class="step-desc">Visitors will see your updates within 60 seconds</div>
-              </div>
-              <div class="step-status" id="stepLive">—</div>
-            </div>
+          <div class="field-group">
+            <label class="field-label">Instagram URL</label>
+            <input class="field-input" id="contactInstagram" type="url">
           </div>
-
-          <div style="margin-top:20px;">
-            <button class="btn btn-primary" onclick="publishSite()">Publish changes now</button>
+          <div class="field-group">
+            <label class="field-label">Instagram handle (e.g. @jasperbaur)</label>
+            <input class="field-input" id="contactHandle" type="text">
           </div>
+          <button class="btn-save" onclick="saveContact()">Save contact info</button>
         </div>
       </div>
 
+      <!-- PUBLISH -->
+      <div class="section" id="section-publish">
+        <div class="section-title">Publish & settings</div>
+        <div class="section-desc">Configure your GitHub connection to publish changes live.</div>
+        <div class="publish-section">
+          <h3>GitHub connection</h3>
+          <p>Required to publish changes to your live website.</p>
+          <div class="field-group">
+            <label class="field-label">GitHub username</label>
+            <input class="field-input" id="ghUsername" type="text" value="jasperbaur" autocomplete="off">
+          </div>
+          <div class="field-group">
+            <label class="field-label">Repository name</label>
+            <input class="field-input" id="ghRepo" type="text" value="jasperbaur.github.io" autocomplete="off">
+          </div>
+          <div class="field-group">
+            <label class="field-label">Personal access token <a href="https://github.com/settings/tokens/new?scopes=repo&description=Jasper+site+editor" target="_blank" style="font-size:11px;color:var(--ink);margin-left:6px">Get new token ↗</a></label>
+            <input class="field-input" id="ghToken" type="text" placeholder="ghp_..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+          </div>
+          <button class="btn-save" onclick="saveGhConfig()">Save connection</button>
+          <div id="ghStatus" style="font-size:12px;margin-top:8px;color:var(--gray)"></div>
+        </div>
+        <div class="publish-section">
+          <h3>Publish status</h3>
+          <p>Publishing pushes all your changes live. It takes about 60 seconds to appear.</p>
+          <div class="steps">
+            <div class="step"><span class="step-label">Connect to GitHub</span><span class="step-status" id="stepGh">—</span></div>
+            <div class="step"><span class="step-label">Push changes</span><span class="step-status" id="stepPush">—</span></div>
+            <div class="step"><span class="step-label">Site goes live</span><span class="step-status" id="stepLive">—</span></div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </div>
 
-<!-- CONFIRM DELETE MODAL -->
-<div class="modal-bg" id="deleteModal">
+<!-- MODALS -->
+<div class="modal-backdrop" id="addProjectModal">
   <div class="modal">
-    <div class="modal-title">Remove this project?</div>
-    <div class="modal-desc">This will remove the project from your website. Your photos won't be deleted from GitHub.</div>
-    <div class="modal-actions">
-      <button class="btn" onclick="closeModal('deleteModal')">Cancel</button>
-      <button class="btn btn-danger" id="confirmDeleteBtn">Remove project</button>
+    <h3>New project</h3>
+    <p>Give your project a name. You can add photos after.</p>
+    <div class="field-group">
+      <label class="field-label">Project name</label>
+      <input class="field-input" id="newProjectName" type="text" placeholder="e.g. Borneo 2024">
+    </div>
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="closeModal('addProjectModal')">Cancel</button>
+      <button class="btn-primary" style="width:auto;padding:8px 18px" onclick="addProject()">Create project</button>
     </div>
   </div>
 </div>
 
-<!-- ADD PROJECT MODAL -->
-<div class="modal-bg" id="addProjectModal">
+<div class="modal-backdrop" id="deleteModal">
   <div class="modal">
-    <div class="modal-title">New project</div>
-    <div class="modal-desc">Give your new project a name. You can add photos and a description after.</div>
-    <div class="field">
-      <div class="field-label">Project name</div>
-      <input class="field-input" id="newProjectName" type="text" placeholder="e.g. Pacific Northwest">
-    </div>
-    <div class="modal-actions">
-      <button class="btn" onclick="closeModal('addProjectModal')">Cancel</button>
-      <button class="btn btn-primary" onclick="confirmAddProject()">Create project</button>
+    <h3>Remove project?</h3>
+    <p>This will remove the project from your site. Photos stored here won't be deleted from your computer.</p>
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="closeModal('deleteModal')">Cancel</button>
+      <button class="btn-primary" style="width:auto;padding:8px 18px;background:var(--danger)" id="confirmDeleteBtn">Remove</button>
     </div>
   </div>
 </div>
 
+<input type="file" id="fileInput" accept="image/*" multiple style="display:none">
 <div class="toast" id="toast"></div>
-<input type="file" id="fileInput" accept="image/*" multiple>
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="loading-spinner">
+    <div class="spinner"></div>
+    <p id="loadingMsg">Loading...</p>
+  </div>
+</div>
 
 <script>
-// ─── CONFIG ───────────────────────────────────────────────────────────────────
-const ADMIN_PASSWORD = 'jasper2024'; // Change this to something Jasper will remember
-const CONTENT_FILE = 'content.json';
-
-// ─── STATE ────────────────────────────────────────────────────────────────────
+// ── CONFIG ─────────────────────────────────────────────────────────────────
+const PASSWORD = 'jasper2024';
 let content = null;
 let currentProjectId = null;
-let unsaved = false;
-let fileInputCallback = null;
+let fileCallback = null;
+let ghConfig = { username: 'jasperbaur', repo: 'jasperbaur.github.io', token: '' };
 
-// ─── LOGIN ────────────────────────────────────────────────────────────────────
-function login() {
-  var pw = document.getElementById('passwordInput').value.trim();
-  var correct = 'jasper2024';
-  if (pw === correct) {
-    document.getElementById('loginScreen').style.display = 'none';
-    document.getElementById('appScreen').style.display = 'flex';
-    try {
-      initApp();
-    } catch(e) {
-      content = getDefaultContent();
-      renderAll();
-    }
+// ── LOGIN ──────────────────────────────────────────────────────────────────
+document.getElementById('loginBtn').addEventListener('click', doLogin);
+document.getElementById('pwInput').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+
+function doLogin() {
+  const pw = document.getElementById('pwInput').value.trim();
+  if (pw === PASSWORD) {
+    document.getElementById('loginWrap').style.display = 'none';
+    document.getElementById('app').style.display = 'flex';
+    initApp();
   } else {
     document.getElementById('loginError').style.display = 'block';
   }
 }
-document.getElementById('passwordInput').addEventListener('keydown', e => { if (e.key === 'Enter') login(); });
 
-// ─── INIT ─────────────────────────────────────────────────────────────────────
+// ── INIT ───────────────────────────────────────────────────────────────────
 async function initApp() {
+  // Load saved GitHub token
+  const saved = localStorage.getItem('jasper_gh_token');
+  if (saved) {
+    ghConfig.token = saved;
+    document.getElementById('ghToken').value = saved;
+  }
+  document.getElementById('ghUsername').value = ghConfig.username;
+  document.getElementById('ghRepo').value = ghConfig.repo;
+
+  // Always load fresh from GitHub
+  await loadFromGitHub();
+}
+
+async function loadFromGitHub() {
+  setStatus('loading', 'Loading from site...');
   try {
-    loadGithubConfig();
-    await loadContent();
+    const url = `https://raw.githubusercontent.com/${ghConfig.username}/${ghConfig.repo}/main/content.json?_=${Date.now()}`;
+    const res = await fetch(url);
+    if (!res.ok) throw new Error('Could not load content.json');
+    content = await res.json();
+    // Ensure all projects have required fields
+    if (!content.projects) content.projects = [];
+    content.projects.forEach(p => {
+      if (!p.status) p.status = 'published';
+      if (!p.photos) p.photos = [];
+    });
+    setStatus('saved', 'All changes saved');
+    renderAll();
   } catch(err) {
-    console.error('Init error:', err);
-    // Fall back to defaults so the app still works
-    if (!content) content = getDefaultContent();
+    setStatus('loading', 'Could not load — using defaults');
+    content = getDefaults();
     renderAll();
   }
 }
 
-async function loadContent() {
-  // Try live content.json first so admin always reflects what's on the site
-  const cfg = JSON.parse(localStorage.getItem('jasper_gh_config') || '{}');
-  let fetched = null;
-  if (cfg.username && cfg.repo) {
-    try {
-      const isRootRepo = cfg.repo === cfg.username + '.github.io';
-      const siteUrl = `https://${cfg.username}.github.io/${isRootRepo ? '' : cfg.repo + '/'}content.json?_=${Date.now()}`;
-      const res = await fetch(siteUrl);
-      if (res.ok) fetched = await res.json();
-    } catch(e) {}
-  }
-
-  if (fetched) {
-    // Ensure all projects have a valid status
-    if (fetched.projects) fetched.projects.forEach(p => { if (!p.status) p.status = 'published'; });
-    // Layer in any local base64 photos not yet published
-    const saved = localStorage.getItem('jasper_content');
-    const local = saved ? JSON.parse(saved) : null;
-    content = fetched;
-    if (local && local.projects) {
-      local.projects.forEach(lp => {
-        const fp = content.projects && content.projects.find(p => p.id === lp.id);
-        if (fp && lp.photos && lp.photos.some(ph => ph.url && ph.url.startsWith('data:'))) {
-          fp.photos = lp.photos;
-          fp.cover = fp.photos[0]?.url || fp.cover;
-        }
-      });
-    }
-  } else {
-    const saved = localStorage.getItem('jasper_content');
-    content = saved ? JSON.parse(saved) : getDefaultContent();
-  }
-  renderAll();
-}
-
-function getDefaultContent() {
+function getDefaults() {
   return {
-    site: {
-      name: 'Jasper Baur',
-      tagline: 'Yielding to the pull toward the edge of things',
-      email: '',
-      instagram: 'https://www.instagram.com/baurjasper/',
-      bio_short: 'Photographer and naturalist with a decade of experience capturing the natural world across remote landscapes.',
-      bio_full: 'I am a photographer and naturalist with more than a decade of experience capturing the natural world. I specialize in camera trapping — using remotely triggered cameras to capture images of elusive wildlife rarely observed otherwise.\n\nAvailable for editorial assignments, brand expeditions, and conservation documentation worldwide.'
-    },
+    site: { name: 'Jasper Baur', email: '', instagram: '', instagramHandle: '@jasperbaur', phone: '' },
     projects: [
-      { id: 'camera-trapping', title: 'Camera Trapping', status: 'published', cover: '', description: 'A decade of fieldwork using remotely triggered cameras to reveal elusive wildlife rarely seen by human eyes.', photos: [] },
-      { id: 'te-araroa', title: 'Te Araroa', status: 'published', cover: '', description: '3,000 km on foot from Cape Reinga to Bluff — four months traversing the full length of New Zealand.', photos: [] },
-      { id: 'snakes-reptiles', title: 'Snakes & Reptiles', status: 'published', cover: '', description: 'Field herpetology across the Americas — from Pacific gopher snakes to cloud forest vipers.', photos: [] },
-      { id: 'find-film', title: 'Find & Film', status: 'published', cover: '', description: 'The naturalist\'s approach to wildlife photography — observation first, camera second.', photos: [] },
-      { id: 'pacific-northwest', title: 'Pacific Northwest', status: 'draft', cover: '', description: 'Old growth, coastline, and the creatures that inhabit the wet edge of the continent.', photos: [] }
+      { id: 'camera-trapping', title: 'Camera Trapping', status: 'published', description: '', photos: [] },
+      { id: 'te-araroa', title: 'Te Araroa', status: 'published', description: '', photos: [] },
+      { id: 'snakes-reptiles', title: 'Snakes & Reptiles', status: 'published', description: '', photos: [] },
+      { id: 'find-film', title: 'Find & Film', status: 'published', description: '', photos: [] },
+      { id: 'pacific-northwest', title: 'Pacific Northwest', status: 'draft', description: '', photos: [] }
     ]
   };
 }
 
-// ─── RENDER ───────────────────────────────────────────────────────────────────
+function setStatus(state, text) {
+  const dot = document.getElementById('statusDot');
+  dot.className = 'status-dot' + (state === 'loading' ? ' loading' : '');
+  document.getElementById('statusText').textContent = text;
+}
+
+// ── RENDER ─────────────────────────────────────────────────────────────────
 function renderAll() {
   renderProjects();
   renderAbout();
@@ -707,377 +421,269 @@ function renderAll() {
 function renderProjects() {
   const grid = document.getElementById('projectsGrid');
   grid.innerHTML = '';
-
-  content.projects.forEach(project => {
+  content.projects.forEach(p => {
+    const cover = p.photos && p.photos.length && p.photos[0].url ? p.photos[0].url : null;
     const card = document.createElement('div');
-    card.className = 'project-card' + (currentProjectId === project.id ? ' editing' : '');
-    card.onclick = () => openProjectEditor(project.id);
+    card.className = 'project-card' + (currentProjectId === p.id ? ' active' : '');
+    card.onclick = () => openProject(p.id);
     card.innerHTML = `
       <div class="project-cover">
-        ${project.cover ? `<img src="${project.cover}" alt="${project.title}">` : `<div class="project-cover-empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg><div>No cover photo</div></div>`}
-        <div class="project-status status-${project.status || 'draft'}">${project.status || 'draft'}</div>
-        ${project.photos.length ? `<div class="photo-count">${project.photos.length} photo${project.photos.length !== 1 ? 's' : ''}</div>` : ''}
+        ${cover
+          ? `<img src="${cover}" alt="${p.title}">`
+          : `<div class="project-cover-empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg><span>No cover photo</span></div>`
+        }
+        <div class="project-badge badge-${p.status}">${p.status}</div>
+        ${p.photos && p.photos.length ? `<div class="photo-count">${p.photos.length} photo${p.photos.length !== 1 ? 's' : ''}</div>` : ''}
       </div>
       <div class="project-info">
-        <div class="project-title">${project.title}</div>
-        <div class="project-subtitle">${project.photos.length ? project.photos.length + ' photos' : 'No photos yet'} · ${project.status || 'draft'}</div>
-      </div>
-    `;
+        <div class="project-name">${p.title}</div>
+        <div class="project-meta">${p.photos && p.photos.length ? p.photos.length + ' photo' + (p.photos.length !== 1 ? 's' : '') : 'No photos yet'} · ${p.status}</div>
+      </div>`;
     grid.appendChild(card);
   });
 
+  // Add project button
   const addCard = document.createElement('div');
   addCard.className = 'add-project-card';
   addCard.onclick = () => openModal('addProjectModal');
-  addCard.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>Add project`;
+  addCard.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg><span>Add project</span>`;
   grid.appendChild(addCard);
 }
 
 function renderAbout() {
-  document.getElementById('aboutTagline').value = content.site.tagline || '';
-  document.getElementById('aboutShort').value = content.site.bio_short || '';
-  document.getElementById('aboutFull').value = content.site.bio_full || '';
+  const s = content.site || {};
+  document.getElementById('aboutTagline').value = s.tagline || '';
+  document.getElementById('aboutShort').value = s.bio_short || '';
+  document.getElementById('aboutFull').value = s.bio_full || '';
 }
 
 function renderContact() {
-  document.getElementById('contactEmail').value = content.site.email || '';
-  document.getElementById('contactInstagram').value = content.site.instagram || '';
+  const s = content.site || {};
+  document.getElementById('contactEmail').value = s.email || '';
+  document.getElementById('contactInstagram').value = s.instagram || '';
+  document.getElementById('contactHandle').value = s.instagramHandle || '';
 }
 
-// ─── PROJECT EDITOR ───────────────────────────────────────────────────────────
-function openProjectEditor(projectId) {
-  currentProjectId = projectId;
-  const project = content.projects.find(p => p.id === projectId);
+// ── PROJECT EDITOR ─────────────────────────────────────────────────────────
+function openProject(id) {
+  currentProjectId = id;
   renderProjects();
+  const p = content.projects.find(x => x.id === id);
+  if (!p) return;
 
   const panel = document.getElementById('editPanel');
-  panel.style.display = 'block';
+  panel.className = 'edit-panel open';
+
+  let photosHtml = (p.photos || []).map((ph, i) => `
+    <div class="photo-item" data-index="${i}">
+      <div class="photo-thumb">
+        ${ph.url ? `<img src="${ph.url}" alt="">` : `<div class="photo-thumb-empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:20px;height:20px"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></div>`}
+        <button class="photo-remove" onclick="removePhoto('${id}',${i})" title="Remove">✕</button>
+      </div>
+      <input class="photo-caption" type="text" placeholder="Caption..." value="${ph.caption || ''}" onchange="updateCaption('${id}',${i},this.value)">
+    </div>`).join('');
+
   panel.innerHTML = `
-    <div class="edit-panel">
-      <div class="edit-panel-header">
-        <div class="edit-panel-title">Editing: ${project.title}</div>
-        <div class="edit-panel-actions">
-          <select class="field-select" style="width:auto;" onchange="updateProjectStatus('${projectId}', this.value)">
-            <option value="published" ${(project.status || 'draft') === 'published' ? 'selected' : ''}>Published</option>
-            <option value="draft" ${(project.status || 'draft') === 'draft' ? 'selected' : ''}>Draft (hidden)</option>
-          </select>
-          <button class="btn btn-danger" onclick="confirmDeleteProject('${projectId}')">Remove</button>
-        </div>
-      </div>
-
-      <div class="field">
-        <div class="field-label">Project title</div>
-        <input class="field-input" type="text" value="${project.title}" onchange="updateProjectField('${projectId}', 'title', this.value)">
-      </div>
-
-      <div class="field">
-        <div class="field-label">Description</div>
-        <textarea class="field-textarea" rows="3" onchange="updateProjectField('${projectId}', 'description', this.value)">${project.description}</textarea>
-      </div>
-
-      <div class="field">
-        <div class="field-label">Photos <span style="color:var(--gray-400);font-weight:400;">(drag to reorder · first photo is the cover)</span></div>
-        <div class="drag-hint">The first photo will appear as the project thumbnail on the main page.</div>
-        <div class="photo-strip" id="photoStrip-${projectId}">
-          ${renderPhotoStrip(project)}
-        </div>
+    <div class="edit-header">
+      <h3>Editing: ${p.title}</h3>
+      <div class="edit-header-right">
+        <select class="field-select" onchange="updateStatus('${id}',this.value)">
+          <option value="published" ${p.status === 'published' ? 'selected' : ''}>Published</option>
+          <option value="draft" ${p.status === 'draft' ? 'selected' : ''}>Draft (hidden)</option>
+        </select>
+        <button class="btn-danger" onclick="confirmDelete('${id}')">Remove</button>
       </div>
     </div>
-  `;
+    <div class="field-group">
+      <label class="field-label">Project title</label>
+      <input class="field-input" type="text" value="${p.title}" onchange="updateField('${id}','title',this.value)">
+    </div>
+    <div class="field-group">
+      <label class="field-label">Description</label>
+      <textarea class="field-textarea" onchange="updateField('${id}','description',this.value)">${p.description || ''}</textarea>
+    </div>
+    <div class="field-group">
+      <div class="photos-label">Photos <span style="color:var(--gray);font-weight:400">(first photo is the cover)</span></div>
+      <div class="photos-hint">The first photo appears as the project thumbnail on the main page.</div>
+      <div class="photo-strip" id="photoStrip">
+        ${photosHtml}
+        <button class="add-photo-btn" onclick="addPhotos('${id}')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          <span>Add photos</span>
+        </button>
+      </div>
+    </div>`;
 
-  initDragDrop(projectId);
   panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
-function renderPhotoStrip(project) {
-  let html = project.photos.map((photo, i) => `
-    <div class="photo-item" draggable="true" data-index="${i}">
-      <div class="photo-thumb">
-        ${photo.url ? `<img src="${photo.url}" alt="">` : `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:24px;height:24px;color:var(--gray-400)"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>`}
-        <button class="photo-remove" onclick="removePhoto('${project.id}', ${i})" title="Remove photo">✕</button>
-      </div>
-      <input class="photo-caption-input" type="text" placeholder="Caption..." value="${photo.caption || ''}" onchange="updatePhotoCaption('${project.id}', ${i}, this.value)" title="Photo caption">
-    </div>
-  `).join('');
-
-  html += `<button class="add-photo-btn" onclick="addPhotos('${project.id}')">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-    Add photos
-  </button>`;
-  return html;
+function updateField(id, field, value) {
+  const p = content.projects.find(x => x.id === id);
+  if (p) { p[field] = value; setStatus('loading', 'Unsaved changes'); }
 }
 
-function updateProjectField(projectId, field, value) {
-  const project = content.projects.find(p => p.id === projectId);
-  if (project) { project[field] = value; saveLocal(); }
+function updateStatus(id, status) {
+  const p = content.projects.find(x => x.id === id);
+  if (p) { p.status = status; renderProjects(); setStatus('loading', 'Unsaved changes'); }
 }
 
-function updateProjectStatus(projectId, status) {
-  updateProjectField(projectId, 'status', status);
-  renderProjects();
+function updateCaption(id, index, caption) {
+  const p = content.projects.find(x => x.id === id);
+  if (p && p.photos[index]) { p.photos[index].caption = caption; setStatus('loading', 'Unsaved changes'); }
 }
 
-function updatePhotoCaption(projectId, index, caption) {
-  const project = content.projects.find(p => p.id === projectId);
-  if (project && project.photos[index]) { project.photos[index].caption = caption; saveLocal(); }
+function removePhoto(id, index) {
+  const p = content.projects.find(x => x.id === id);
+  if (p) { p.photos.splice(index, 1); openProject(id); setStatus('loading', 'Unsaved changes'); }
 }
 
-// ─── PHOTOS ───────────────────────────────────────────────────────────────────
+// ── PHOTO UPLOAD ───────────────────────────────────────────────────────────
 function addPhotos(projectId) {
-  fileInputCallback = (files) => handlePhotoUpload(projectId, files);
-  document.getElementById('fileInput').multiple = true;
+  fileCallback = (files) => handlePhotos(projectId, files);
+  document.getElementById('fileInput').value = '';
   document.getElementById('fileInput').click();
 }
 
 document.getElementById('fileInput').addEventListener('change', function() {
-  if (fileInputCallback && this.files.length) {
-    fileInputCallback(this.files);
-    fileInputCallback = null;
-    this.value = '';
+  if (fileCallback && this.files.length) {
+    fileCallback(this.files);
+    fileCallback = null;
   }
 });
 
-function handlePhotoUpload(projectId, files) {
-  const project = content.projects.find(p => p.id === projectId);
+function handlePhotos(projectId, files) {
+  const p = content.projects.find(x => x.id === projectId);
+  if (!p) return;
   let loaded = 0;
+  const total = files.length;
+  showLoading(`Preparing ${total} photo${total > 1 ? 's' : ''}...`);
   Array.from(files).forEach(file => {
     const reader = new FileReader();
     reader.onload = (e) => {
-      project.photos.push({ id: 'photo-' + Date.now() + '-' + loaded + '-' + Math.random().toString(36).slice(2,7), url: e.target.result, caption: '', filename: file.name });
-      if (!project.cover) project.cover = e.target.result;
+      p.photos.push({ id: 'ph-' + Date.now() + '-' + Math.random().toString(36).slice(2,6), url: e.target.result, caption: '', filename: file.name });
       loaded++;
-      saveLocal();
-      if (loaded === files.length) {
-        openProjectEditor(projectId);
-        showToast(files.length + ' photo' + (files.length > 1 ? 's' : '') + ' added');
+      if (loaded === total) {
+        hideLoading();
+        openProject(projectId);
+        setStatus('loading', 'Unsaved changes');
+        showToast(total + ' photo' + (total > 1 ? 's' : '') + ' added — remember to publish');
       }
     };
     reader.readAsDataURL(file);
   });
 }
 
-function removePhoto(projectId, index) {
-  const project = content.projects.find(p => p.id === projectId);
-  project.photos.splice(index, 1);
-  if (project.cover && project.photos.length > 0) project.cover = project.photos[0].url;
-  if (project.photos.length === 0) project.cover = '';
-  saveLocal();
-  openProjectEditor(projectId);
-}
-
-// ─── DRAG & DROP REORDER ──────────────────────────────────────────────────────
-function initDragDrop(projectId) {
-  const strip = document.getElementById('photoStrip-' + projectId);
-  if (!strip) return;
-  let dragIdx = null;
-
-  strip.querySelectorAll('.photo-item').forEach((item, i) => {
-    item.addEventListener('dragstart', () => { dragIdx = i; item.classList.add('dragging'); });
-    item.addEventListener('dragend', () => item.classList.remove('dragging'));
-    item.addEventListener('dragover', (e) => { e.preventDefault(); });
-    item.addEventListener('drop', () => {
-      if (dragIdx === null || dragIdx === i) return;
-      const project = content.projects.find(p => p.id === projectId);
-      const moved = project.photos.splice(dragIdx, 1)[0];
-      project.photos.splice(i, 0, moved);
-      project.cover = project.photos[0]?.url || '';
-      saveLocal();
-      openProjectEditor(projectId);
-    });
-  });
-}
-
-// ─── ABOUT & CONTACT ─────────────────────────────────────────────────────────
-function saveAbout() {
-  content.site.tagline = document.getElementById('aboutTagline').value;
-  content.site.bio_short = document.getElementById('aboutShort').value;
-  content.site.bio_full = document.getElementById('aboutFull').value;
-  saveLocal();
-  showToast('About section saved');
-}
-
-function saveContact() {
-  content.site.email = document.getElementById('contactEmail').value;
-  content.site.instagram = document.getElementById('contactInstagram').value;
-  saveLocal();
-  showToast('Contact info saved');
-}
-
-// ─── ADD / DELETE PROJECTS ────────────────────────────────────────────────────
-function confirmAddProject() {
+// ── ADD / DELETE PROJECT ───────────────────────────────────────────────────
+function addProject() {
   const name = document.getElementById('newProjectName').value.trim();
   if (!name) return;
-  const id = name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-  content.projects.push({ id, title: name, status: 'draft', cover: '', description: '', photos: [] });
-  saveLocal();
-  renderProjects();
+  const id = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+  content.projects.push({ id, title: name, status: 'draft', description: '', photos: [] });
   closeModal('addProjectModal');
   document.getElementById('newProjectName').value = '';
-  openProjectEditor(id);
+  renderProjects();
+  openProject(id);
+  setStatus('loading', 'Unsaved changes');
   showToast('Project created');
 }
 
-let deleteTargetId = null;
-function confirmDeleteProject(projectId) {
-  deleteTargetId = projectId;
+let deleteId = null;
+function confirmDelete(id) {
+  deleteId = id;
   openModal('deleteModal');
   document.getElementById('confirmDeleteBtn').onclick = () => {
-    content.projects = content.projects.filter(p => p.id !== deleteTargetId);
-    if (currentProjectId === deleteTargetId) {
+    content.projects = content.projects.filter(p => p.id !== deleteId);
+    if (currentProjectId === deleteId) {
       currentProjectId = null;
-      document.getElementById('editPanel').style.display = 'none';
+      document.getElementById('editPanel').className = 'edit-panel';
     }
-    saveLocal();
     renderProjects();
     closeModal('deleteModal');
+    setStatus('loading', 'Unsaved changes');
     showToast('Project removed');
   };
 }
 
-// ─── SAVE ─────────────────────────────────────────────────────────────────────
-function saveLocal() {
-  localStorage.setItem('jasper_content', JSON.stringify(content));
-  markUnsaved();
+// ── ABOUT & CONTACT ────────────────────────────────────────────────────────
+function saveAbout() {
+  if (!content.site) content.site = {};
+  content.site.tagline = document.getElementById('aboutTagline').value;
+  content.site.bio_short = document.getElementById('aboutShort').value;
+  content.site.bio_full = document.getElementById('aboutFull').value;
+  setStatus('loading', 'Unsaved changes');
+  showToast('About saved — remember to publish');
 }
 
-function markUnsaved() {
-  unsaved = true;
-  document.getElementById('saveDot').className = 'save-dot unsaved';
-  document.getElementById('saveStatusText').textContent = 'Unsaved changes';
+function saveContact() {
+  if (!content.site) content.site = {};
+  content.site.email = document.getElementById('contactEmail').value;
+  content.site.instagram = document.getElementById('contactInstagram').value;
+  content.site.instagramHandle = document.getElementById('contactHandle').value;
+  setStatus('loading', 'Unsaved changes');
+  showToast('Contact saved — remember to publish');
 }
 
-function markSaved() {
-  unsaved = false;
-  document.getElementById('saveDot').className = 'save-dot saved';
-  document.getElementById('saveStatusText').textContent = 'All changes saved';
-}
-
-// ─── GITHUB & PUBLISH ─────────────────────────────────────────────────────────
-function loadGithubConfig() {
-  const cfg = JSON.parse(localStorage.getItem('jasper_gh_config') || '{}');
-  if (cfg.username) document.getElementById('ghUsername').value = cfg.username;
-  if (cfg.token) document.getElementById('ghToken').value = cfg.token;
-  if (cfg.repo) document.getElementById('ghRepo').value = cfg.repo;
-}
-
-function saveGithubConfig() {
-  const username = document.getElementById('ghUsername').value.trim();
-  const token = document.getElementById('ghToken').value.trim();
-  const repo = document.getElementById('ghRepo').value.trim();
-  if (!username || !token || !repo) {
-    document.getElementById('ghConfigStatus').textContent = 'Please fill in all three fields';
-    return;
-  }
-  const cfg = { username, token, repo };
-  localStorage.setItem('jasper_gh_config', JSON.stringify(cfg));
-  document.getElementById('ghConfigStatus').style.color = 'var(--success)';
-  document.getElementById('ghConfigStatus').textContent = 'Saved ✓ — token: ' + token.substring(0, 6) + '...';
-  setTimeout(() => document.getElementById('ghConfigStatus').textContent = '', 4000);
-}
-
-function getGithubConfig() {
-  // Always read live from fields first, fall back to localStorage
-  const liveUsername = document.getElementById('ghUsername') ? document.getElementById('ghUsername').value.trim() : '';
-  const liveToken = document.getElementById('ghToken') ? document.getElementById('ghToken').value.trim() : '';
-  const liveRepo = document.getElementById('ghRepo') ? document.getElementById('ghRepo').value.trim() : '';
-  if (liveUsername && liveToken && liveRepo) {
-    return { username: liveUsername, token: liveToken, repo: liveRepo };
-  }
-  return JSON.parse(localStorage.getItem('jasper_gh_config') || '{}');
+// ── GITHUB ─────────────────────────────────────────────────────────────────
+function saveGhConfig() {
+  ghConfig.username = document.getElementById('ghUsername').value.trim();
+  ghConfig.repo = document.getElementById('ghRepo').value.trim();
+  ghConfig.token = document.getElementById('ghToken').value.trim();
+  localStorage.setItem('jasper_gh_token', ghConfig.token);
+  document.getElementById('ghStatus').textContent = 'Saved ✓';
+  setTimeout(() => document.getElementById('ghStatus').textContent = '', 3000);
 }
 
 async function publishSite() {
-  const cfg = getGithubConfig();
-  if (!cfg.username || !cfg.token || !cfg.repo) {
+  if (!ghConfig.token) {
+    showToast('Please add your GitHub token in Publish & settings', true);
     showSection('publish', document.querySelector('.nav-item:nth-child(4)'));
-    showToast('Please set up your GitHub connection first', true);
     return;
   }
 
   const btn = document.getElementById('publishBtn');
   btn.disabled = true;
-  btn.innerHTML = '<span class="spinner"></span> Publishing...';
-
-  updateStepStatus('stepGh', 'pending', 'Connecting...');
-  updateStepStatus('stepChanges', 'pending', 'Preparing...');
-  updateStepStatus('stepLive', 'pending', 'Waiting...');
+  btn.textContent = 'Publishing...';
+  setStep('stepGh', '', '—'); setStep('stepPush', '', '—'); setStep('stepLive', '', '—');
 
   try {
-    const contentToPublish = prepareContentForPublish();
-    const contentJson = JSON.stringify(contentToPublish, null, 2);
-
-    await pushFileToGithub(cfg, CONTENT_FILE, contentJson, 'Update site content');
-
-    updateStepStatus('stepGh', 'done', '✓ Connected');
-    updateStepStatus('stepChanges', 'done', '✓ Published');
-    setTimeout(() => updateStepStatus('stepLive', 'done', '✓ Live'), 3000);
-
-    markSaved();
-    showToast('Published! Your site will update within 60 seconds.');
-  } catch (err) {
-    updateStepStatus('stepGh', 'error', '✗ Failed');
+    setStep('stepGh', 'done', '✓ Connected');
+    const json = JSON.stringify(content, null, 2);
+    await pushToGitHub('content.json', json, 'Update site content');
+    setStep('stepPush', 'done', '✓ Pushed');
+    setTimeout(() => setStep('stepLive', 'done', '✓ Live in ~60s'), 2000);
+    setStatus('saved', 'All changes saved');
+    showToast('Published! Site updates in about 60 seconds.');
+  } catch(err) {
+    setStep('stepGh', 'error', '✗ ' + err.message);
     showToast('Publish failed: ' + err.message, true);
-    console.error(err);
   }
 
   btn.disabled = false;
-  btn.innerHTML = 'Publish changes';
+  btn.textContent = 'Publish changes';
 }
 
-function prepareContentForPublish() {
-  // Photos are stored as base64 directly in content.json — no separate file upload needed.
-  // The live site reads src from photo.url which works whether it's base64 or a URL.
-  const pub = JSON.parse(JSON.stringify(content));
-  pub.projects.forEach(p => {
-    p.photos = p.photos.map(photo => ({
-      id: photo.id || ('photo-' + Date.now()),
-      url: photo.url || '',
-      src: photo.url || '',   // index.html reads photo.src for gallery
-      alt: photo.caption || p.title,
-      caption: photo.caption || ''
-    }));
-    if (p.photos.length > 0) {
-      p.cover = p.photos[0].url;
-    }
-  });
-  return pub;
-}
-
-async function pushFileToGithub(cfg, path, content, message) {
-  const apiBase = `https://api.github.com/repos/${cfg.username}/${cfg.repo}/contents/${path}`;
-  const headers = {
-    'Authorization': `token ${cfg.token}`,
-    'Content-Type': 'application/json',
-    'Accept': 'application/vnd.github.v3+json'
-  };
-
+async function pushToGitHub(path, body, message) {
+  const base = `https://api.github.com/repos/${ghConfig.username}/${ghConfig.repo}/contents/${path}`;
+  const headers = { 'Authorization': `token ${ghConfig.token}`, 'Content-Type': 'application/json', 'Accept': 'application/vnd.github.v3+json' };
   let sha = null;
-  try {
-    const existing = await fetch(apiBase, { headers });
-    if (existing.ok) { const data = await existing.json(); sha = data.sha; }
-  } catch(e) {}
-
-  const body = { message, content: btoa(unescape(encodeURIComponent(content))) };
-  if (sha) body.sha = sha;
-
-  const res = await fetch(apiBase, { method: 'PUT', headers, body: JSON.stringify(body) });
-  if (!res.ok) { const err = await res.json(); throw new Error(err.message || 'GitHub API error'); }
+  try { const r = await fetch(base, { headers }); if (r.ok) { const d = await r.json(); sha = d.sha; } } catch(e) {}
+  const payload = { message, content: btoa(unescape(encodeURIComponent(body))) };
+  if (sha) payload.sha = sha;
+  const res = await fetch(base, { method: 'PUT', headers, body: JSON.stringify(payload) });
+  if (!res.ok) { const e = await res.json(); throw new Error(e.message || 'GitHub error'); }
   return res.json();
 }
 
-function updateStepStatus(id, type, text) {
+function setStep(id, cls, text) {
   const el = document.getElementById(id);
-  if (el) { el.className = 'step-status ' + type; el.textContent = text; }
+  if (el) { el.className = 'step-status' + (cls ? ' ' + cls : ''); el.textContent = text; }
 }
 
 function previewSite() {
-  const cfg = getGithubConfig();
-  const url = cfg.username ? `https://${cfg.username}.github.io` : '#';
-  if (url !== '#') window.open(url, '_blank');
-  else showToast('Set up GitHub first to preview your live site', true);
+  window.open(`https://${ghConfig.username}.github.io`, '_blank');
 }
 
-// ─── UI HELPERS ───────────────────────────────────────────────────────────────
+// ── UI HELPERS ─────────────────────────────────────────────────────────────
 function showSection(name, el) {
   document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
@@ -1091,14 +697,15 @@ function closeModal(id) { document.getElementById(id).classList.remove('open'); 
 function showToast(msg, isError) {
   const t = document.getElementById('toast');
   t.textContent = msg;
-  t.className = 'toast' + (isError ? ' error' : '') + ' show';
-  setTimeout(() => t.className = 'toast', 3000);
+  t.className = 'toast show' + (isError ? ' error' : '');
+  setTimeout(() => t.className = 'toast', 3500);
 }
 
-// Close modals on background click
-document.querySelectorAll('.modal-bg').forEach(bg => {
-  bg.addEventListener('click', e => { if (e.target === bg) bg.classList.remove('open'); });
-});
+function showLoading(msg) {
+  document.getElementById('loadingMsg').textContent = msg || 'Loading...';
+  document.getElementById('loadingOverlay').classList.add('show');
+}
+function hideLoading() { document.getElementById('loadingOverlay').classList.remove('show'); }
 </script>
 </body>
 </html>
