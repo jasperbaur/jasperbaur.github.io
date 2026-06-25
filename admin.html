@@ -404,7 +404,7 @@
     <div class="login-sub">Site editor — sign in to continue</div>
     <div class="login-field">
       <div class="field-label">Password</div>
-      <input class="field-input" type="password" id="passwordInput" placeholder="Enter your password" autocomplete="current-password">
+      <input class="field-input" type="password" id="passwordInput" placeholder="jasper2024" autocomplete="off" autocorrect="off" autocapitalize="off">
     </div>
     <button class="btn btn-primary" style="width:100%;justify-content:center;" onclick="login()">Sign in</button>
     <div id="loginError" style="color:var(--danger);font-size:12px;margin-top:10px;display:none;">Incorrect password. Try again.</div>
@@ -611,15 +611,17 @@ let fileInputCallback = null;
 
 // ─── LOGIN ────────────────────────────────────────────────────────────────────
 function login() {
-  const pw = document.getElementById('passwordInput').value;
-  if (pw === ADMIN_PASSWORD) {
+  var pw = document.getElementById('passwordInput').value.trim();
+  var correct = 'jasper2024';
+  if (pw === correct) {
     document.getElementById('loginScreen').style.display = 'none';
-    document.getElementById('appScreen').style.display = 'block';
-    initApp().catch(err => {
-      console.error('Login init error:', err);
-      if (!content) content = getDefaultContent();
+    document.getElementById('appScreen').style.display = 'flex';
+    try {
+      initApp();
+    } catch(e) {
+      content = getDefaultContent();
       renderAll();
-    });
+    }
   } else {
     document.getElementById('loginError').style.display = 'block';
   }
@@ -689,7 +691,7 @@ function getDefaultContent() {
       { id: 'camera-trapping', title: 'Camera Trapping', status: 'published', cover: '', description: 'A decade of fieldwork using remotely triggered cameras to reveal elusive wildlife rarely seen by human eyes.', photos: [] },
       { id: 'te-araroa', title: 'Te Araroa', status: 'published', cover: '', description: '3,000 km on foot from Cape Reinga to Bluff — four months traversing the full length of New Zealand.', photos: [] },
       { id: 'snakes-reptiles', title: 'Snakes & Reptiles', status: 'published', cover: '', description: 'Field herpetology across the Americas — from Pacific gopher snakes to cloud forest vipers.', photos: [] },
-      { id: 'find-film', title: 'Find & Film', status: 'published', cover: '', description: 'The naturalist's approach to wildlife photography — observation first, camera second.', photos: [] },
+      { id: 'find-film', title: 'Find & Film', status: 'published', cover: '', description: 'The naturalist\'s approach to wildlife photography — observation first, camera second.', photos: [] },
       { id: 'pacific-northwest', title: 'Pacific Northwest', status: 'draft', cover: '', description: 'Old growth, coastline, and the creatures that inhabit the wet edge of the continent.', photos: [] }
     ]
   };
