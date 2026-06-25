@@ -615,7 +615,11 @@ function login() {
   if (pw === ADMIN_PASSWORD) {
     document.getElementById('loginScreen').style.display = 'none';
     document.getElementById('appScreen').style.display = 'block';
-    initApp();
+    initApp().catch(err => {
+      console.error('Login init error:', err);
+      if (!content) content = getDefaultContent();
+      renderAll();
+    });
   } else {
     document.getElementById('loginError').style.display = 'block';
   }
@@ -624,8 +628,15 @@ document.getElementById('passwordInput').addEventListener('keydown', e => { if (
 
 // ─── INIT ─────────────────────────────────────────────────────────────────────
 async function initApp() {
-  loadGithubConfig();
-  await loadContent();
+  try {
+    loadGithubConfig();
+    await loadContent();
+  } catch(err) {
+    console.error('Init error:', err);
+    // Fall back to defaults so the app still works
+    if (!content) content = getDefaultContent();
+    renderAll();
+  }
 }
 
 async function loadContent() {
