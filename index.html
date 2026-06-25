@@ -246,9 +246,17 @@ async function loadContent() {
   document.getElementById('stmt-paras').innerHTML =
     st.paragraphs.map(p => `<p>${p}</p>`).join('');
 
-  // Gallery
+  // Gallery — built from projects (cover photo + title), falls back to d.gallery
   const gg = document.getElementById('gallery-grid');
-  d.gallery.forEach((img, i) => {
+  const galleryItems = (d.projects && d.projects.length)
+    ? d.projects.map(p => ({
+        src: (p.photos && p.photos.length) ? (p.photos[0].src || p.photos[0].url || '') : '',
+        alt: (p.photos && p.photos.length) ? (p.photos[0].alt || p.title) : p.title,
+        caption: p.title,
+        slug: p.slug || ''
+      }))
+    : (d.gallery || []);
+  galleryItems.forEach((img) => {
     const cell = document.createElement('div');
     cell.className = 'gcell';
     cell.dataset.caption = img.caption;

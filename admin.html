@@ -623,17 +623,41 @@ function login() {
 document.getElementById('passwordInput').addEventListener('keydown', e => { if (e.key === 'Enter') login(); });
 
 // ─── INIT ─────────────────────────────────────────────────────────────────────
-function initApp() {
+async function initApp() {
   loadGithubConfig();
-  loadContent();
+  await loadContent();
 }
 
-function loadContent() {
-  const saved = localStorage.getItem('jasper_content');
-  if (saved) {
-    content = JSON.parse(saved);
+async function loadContent() {
+  // Try live content.json first so admin always reflects what's on the site
+  const cfg = JSON.parse(localStorage.getItem('jasper_gh_config') || '{}');
+  let fetched = null;
+  if (cfg.username && cfg.repo) {
+    try {
+      const isRootRepo = cfg.repo === cfg.username + '.github.io';
+      const siteUrl = `https://${cfg.username}.github.io/${isRootRepo ? '' : cfg.repo + '/'}content.json?_=${Date.now()}`;
+      const res = await fetch(siteUrl);
+      if (res.ok) fetched = await res.json();
+    } catch(e) {}
+  }
+
+  if (fetched) {
+    // Layer in any local base64 photos not yet published
+    const saved = localStorage.getItem('jasper_content');
+    const local = saved ? JSON.parse(saved) : null;
+    content = fetched;
+    if (local && local.projects) {
+      local.projects.forEach(lp => {
+        const fp = content.projects && content.projects.find(p => p.id === lp.id);
+        if (fp && lp.photos && lp.photos.some(ph => ph.url && ph.url.startsWith('data:'))) {
+          fp.photos = lp.photos;
+          fp.cover = fp.photos[0]?.url || fp.cover;
+        }
+      });
+    }
   } else {
-    content = getDefaultContent();
+    const saved = localStorage.getItem('jasper_content');
+    content = saved ? JSON.parse(saved) : getDefaultContent();
   }
   renderAll();
 }
@@ -986,14 +1010,20 @@ async function publishSite() {
 }
 
 function prepareContentForPublish() {
+  // Photos are stored as base64 directly in content.json — no separate file upload needed.
+  // The live site reads src from photo.url which works whether it's base64 or a URL.
   const pub = JSON.parse(JSON.stringify(content));
   pub.projects.forEach(p => {
     p.photos = p.photos.map(photo => ({
-      id: photo.id,
-      url: photo.filename ? `images/${p.id}/${photo.filename}` : photo.url,
+      id: photo.id || ('photo-' + Date.now()),
+      url: photo.url || '',
+      src: photo.url || '',   // index.html reads photo.src for gallery
+      alt: photo.caption || p.title,
       caption: photo.caption || ''
     }));
-    if (p.photos.length > 0) p.cover = p.photos[0].url;
+    if (p.photos.length > 0) {
+      p.cover = p.photos[0].url;
+    }
   });
   return pub;
 }
