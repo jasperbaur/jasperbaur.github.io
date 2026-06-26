@@ -2,710 +2,884 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Jasper Baur — Site Editor</title>
 <style>
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-:root{
-  --ink:#100f0e;--paper:#f6f4f0;--warm:#faf8f4;
-  --gray:#888;--light:#e8e5e0;--success:#2d7a4f;--danger:#c0392b;
-  --serif:'Georgia',serif;--sans:system-ui,sans-serif;
-}
-body{font-family:var(--sans);background:#f0ede8;color:var(--ink);min-height:100vh}
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  :root{--ink:#100f0e;--paper:#f6f4f0;--warm:#faf8f4;--accent:#2563eb;--red:#dc2626;--border:#e5e3df;--sidebar:280px}
+  body{font-family:'Inter','Helvetica Neue',sans-serif;font-size:14px;background:var(--warm);color:var(--ink);min-height:100vh}
 
-/* LOGIN */
-.login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center}
-.login-card{background:#fff;border-radius:12px;padding:40px;width:360px;box-shadow:0 2px 24px rgba(0,0,0,.08)}
-.login-card h1{font-size:20px;font-weight:600;margin-bottom:4px}
-.login-card p{color:var(--gray);font-size:13px;margin-bottom:28px}
-.login-card label{display:block;font-size:12px;font-weight:500;margin-bottom:6px;letter-spacing:.04em}
-.login-card input{width:100%;padding:10px 12px;border:1px solid var(--light);border-radius:6px;font-size:14px;outline:none;margin-bottom:16px}
-.login-card input:focus{border-color:var(--ink)}
-.btn-primary{width:100%;background:var(--ink);color:#fff;border:none;padding:12px;border-radius:6px;font-size:14px;font-weight:500;cursor:pointer}
-.btn-primary:hover{opacity:.85}
-.login-error{color:var(--danger);font-size:12px;margin-top:8px;display:none}
+  /* LOGIN */
+  #login-screen{position:fixed;inset:0;background:var(--paper);display:flex;align-items:center;justify-content:center;z-index:9999}
+  .login-box{width:360px;padding:2.5rem;background:#fff;border:1px solid var(--border)}
+  .login-box h1{font-family:Georgia,serif;font-size:1.5rem;margin-bottom:.5rem}
+  .login-box p{color:#666;font-size:.85rem;margin-bottom:1.75rem}
+  .login-box input{width:100%;padding:.6rem .75rem;border:1px solid var(--border);font-size:.9rem;margin-bottom:.75rem;font-family:inherit}
+  .login-box input:focus{outline:2px solid var(--accent);border-color:transparent}
+  .btn-primary{width:100%;background:var(--ink);color:#fff;border:none;padding:.7rem;font-size:.85rem;letter-spacing:.05em;text-transform:uppercase;cursor:pointer}
+  .btn-primary:hover{opacity:.85}
+  .login-err{color:var(--red);font-size:.8rem;margin-top:.5rem;display:none}
 
-/* APP SHELL */
-.app{display:none;min-height:100vh;flex-direction:column}
-.topbar{background:#fff;border-bottom:1px solid var(--light);padding:0 24px;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
-.topbar-left{display:flex;align-items:center;gap:12px}
-.topbar-title{font-weight:600;font-size:15px}
-.topbar-title span{color:var(--gray);font-weight:400}
-.status-dot{width:7px;height:7px;border-radius:50%;background:var(--success)}
-.status-dot.loading{background:#f0a500}
-.status-text{font-size:12px;color:var(--gray)}
-.topbar-right{display:flex;gap:10px;align-items:center}
-.btn-preview{background:none;border:1px solid var(--light);padding:7px 16px;border-radius:6px;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:6px}
-.btn-preview:hover{border-color:var(--ink)}
-.btn-publish{background:var(--ink);color:#fff;border:none;padding:8px 18px;border-radius:6px;font-size:13px;font-weight:500;cursor:pointer}
-.btn-publish:hover{opacity:.85}
-.btn-publish:disabled{opacity:.5;cursor:not-allowed}
+  /* LAYOUT */
+  #app{display:none;min-height:100vh}
+  header{position:fixed;top:0;left:0;right:0;height:52px;background:#fff;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 1.5rem;z-index:100}
+  .header-left{display:flex;align-items:center;gap:.75rem}
+  .header-logo{font-family:Georgia,serif;font-size:1rem}
+  .header-title{font-size:.8rem;color:#888;font-weight:400}
+  .save-dot{width:8px;height:8px;border-radius:50%;background:#22c55e;display:inline-block}
+  .save-status{font-size:.78rem;color:#666;display:flex;align-items:center;gap:.4rem}
+  .btn-publish{background:var(--ink);color:#fff;border:none;padding:.5rem 1.25rem;font-size:.8rem;letter-spacing:.04em;cursor:pointer;text-transform:uppercase}
+  .btn-publish:hover{opacity:.85}
+  .btn-publish:disabled{opacity:.4;cursor:not-allowed}
+  .btn-preview{background:none;border:1px solid var(--border);padding:.5rem 1.1rem;font-size:.8rem;color:var(--ink);cursor:pointer;text-decoration:none;margin-right:.5rem;display:inline-block;line-height:1}
+  .btn-preview:hover{background:var(--warm)}
 
-.body{display:flex;flex:1}
-.sidebar{width:220px;background:#fff;border-right:1px solid var(--light);padding:20px 0;flex-shrink:0}
-.nav-section{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--gray);padding:0 16px;margin-bottom:6px;margin-top:20px}
-.nav-section:first-child{margin-top:0}
-.nav-item{display:flex;align-items:center;gap:10px;padding:9px 16px;font-size:13px;cursor:pointer;color:#444;border-left:2px solid transparent}
-.nav-item:hover{background:#f8f7f5}
-.nav-item.active{background:#f0ede8;color:var(--ink);font-weight:500;border-left-color:var(--ink)}
-.nav-item svg{width:15px;height:15px;opacity:.5}
+  /* SIDEBAR */
+  aside{position:fixed;top:52px;left:0;bottom:0;width:var(--sidebar);background:#fff;border-right:1px solid var(--border);overflow-y:auto;padding:1.25rem 0}
+  .sidebar-section{padding:.25rem 1.25rem;font-size:.65rem;letter-spacing:.12em;text-transform:uppercase;color:#aaa;margin-top:1rem;margin-bottom:.25rem}
+  .nav-item{display:flex;align-items:center;gap:.6rem;padding:.55rem 1.25rem;cursor:pointer;border-radius:0;transition:background .15s;color:var(--ink);text-decoration:none;font-size:.88rem}
+  .nav-item:hover{background:var(--warm)}
+  .nav-item.active{background:var(--warm);font-weight:500}
+  .nav-icon{width:16px;height:16px;opacity:.5;flex-shrink:0}
 
-.main{flex:1;padding:32px;overflow-y:auto;max-width:900px}
-.section{display:none}
-.section.active{display:block}
-.section-title{font-size:22px;font-weight:600;margin-bottom:6px}
-.section-desc{color:var(--gray);font-size:13px;margin-bottom:28px}
+  /* MAIN */
+  main{margin-left:var(--sidebar);margin-top:52px;padding:2rem 2.5rem;max-width:860px}
+  .panel{display:none}
+  .panel.active{display:block}
+  .panel-title{font-family:Georgia,serif;font-size:1.5rem;margin-bottom:.4rem}
+  .panel-sub{color:#888;font-size:.85rem;margin-bottom:2rem}
 
-/* PROJECTS GRID */
-.projects-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
-.project-card{background:#fff;border-radius:10px;overflow:hidden;cursor:pointer;border:2px solid transparent;transition:border-color .15s}
-.project-card:hover{border-color:#ddd}
-.project-card.active{border-color:var(--ink)}
-.project-cover{height:160px;background:#e8e5e0;position:relative;overflow:hidden}
-.project-cover img{width:100%;height:100%;object-fit:cover}
-.project-cover-empty{width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;color:#bbb}
-.project-cover-empty svg{width:28px;height:28px}
-.project-cover-empty span{font-size:12px}
-.project-badge{position:absolute;top:10px;right:10px;font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;padding:3px 8px;border-radius:20px}
-.badge-published{background:rgba(45,122,79,.15);color:#1a7a40}
-.badge-draft{background:rgba(180,100,30,.15);color:#b5601a}
-.photo-count{position:absolute;bottom:10px;left:10px;background:rgba(0,0,0,.6);color:#fff;font-size:11px;padding:3px 8px;border-radius:20px}
-.project-info{padding:14px}
-.project-name{font-weight:600;font-size:14px;margin-bottom:2px}
-.project-meta{font-size:12px;color:var(--gray)}
-.add-project-card{background:#fff;border-radius:10px;border:2px dashed var(--light);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;cursor:pointer;min-height:220px;color:var(--gray);transition:border-color .15s}
-.add-project-card:hover{border-color:#aaa;color:#666}
-.add-project-card svg{width:28px;height:28px}
-.add-project-card span{font-size:13px}
+  /* FORM ELEMENTS */
+  .field{margin-bottom:1.5rem}
+  .field label{display:block;font-size:.78rem;font-weight:500;letter-spacing:.04em;text-transform:uppercase;margin-bottom:.4rem;color:#555}
+  .field input[type=text],.field input[type=email],.field input[type=tel],.field textarea,.field select{width:100%;padding:.6rem .75rem;border:1px solid var(--border);font-size:.9rem;font-family:inherit;background:#fff;color:var(--ink)}
+  .field input:focus,.field textarea:focus,.field select:focus{outline:2px solid var(--accent);border-color:transparent}
+  .field textarea{resize:vertical;min-height:90px;line-height:1.6}
+  .field .hint{font-size:.75rem;color:#999;margin-top:.3rem}
+  .field-row{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
 
-/* EDIT PANEL */
-.edit-panel{background:#fff;border-radius:10px;padding:24px;margin-top:20px;display:none}
-.edit-panel.open{display:block}
-.edit-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
-.edit-header h3{font-size:16px;font-weight:600}
-.edit-header-right{display:flex;gap:8px;align-items:center}
-.field-group{margin-bottom:16px}
-.field-label{font-size:12px;font-weight:500;margin-bottom:6px;display:block;color:#555}
-.field-input{width:100%;padding:9px 12px;border:1px solid var(--light);border-radius:6px;font-size:13px;outline:none;font-family:inherit}
-.field-input:focus{border-color:var(--ink)}
-.field-textarea{width:100%;padding:9px 12px;border:1px solid var(--light);border-radius:6px;font-size:13px;outline:none;font-family:inherit;resize:vertical;min-height:80px}
-.field-textarea:focus{border-color:var(--ink)}
-.field-select{padding:8px 12px;border:1px solid var(--light);border-radius:6px;font-size:13px;outline:none;background:#fff}
-.btn-danger{background:none;border:1px solid var(--danger);color:var(--danger);padding:7px 14px;border-radius:6px;font-size:13px;cursor:pointer}
-.btn-danger:hover{background:var(--danger);color:#fff}
+  /* CARDS */
+  .card{background:#fff;border:1px solid var(--border);padding:1.25rem;margin-bottom:1rem}
+  .card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;cursor:pointer}
+  .card-title{font-size:.92rem;font-weight:500}
+  .card-badge{font-size:.68rem;letter-spacing:.08em;text-transform:uppercase;background:var(--warm);padding:.2rem .55rem;color:#666}
+  .card-body{display:none}
+  .card-body.open{display:block}
+  .toggle-arrow{font-size:.7rem;color:#aaa;transition:transform .2s}
+  .card-header.open .toggle-arrow{transform:rotate(180deg)}
 
-/* PHOTOS */
-.photos-label{font-size:12px;font-weight:500;color:#555;margin-bottom:4px}
-.photos-hint{font-size:11px;color:var(--gray);margin-bottom:12px}
-.photo-strip{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:12px}
-.photo-item{position:relative;width:100px}
-.photo-thumb{width:100px;height:80px;border-radius:6px;overflow:hidden;background:#e8e5e0;border:1px solid var(--light)}
-.photo-thumb img{width:100%;height:100%;object-fit:cover}
-.photo-thumb-empty{width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:#bbb}
-.photo-remove{position:absolute;top:4px;right:4px;width:20px;height:20px;background:rgba(0,0,0,.6);color:#fff;border:none;border-radius:50%;font-size:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .15s}
-.photo-item:hover .photo-remove{opacity:1}
-.photo-caption{width:100%;margin-top:4px;padding:4px 6px;border:1px solid var(--light);border-radius:4px;font-size:11px;outline:none}
-.photo-caption:focus{border-color:var(--ink)}
-.add-photo-btn{width:100px;height:80px;border:2px dashed var(--light);border-radius:6px;background:none;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;color:#bbb;transition:border-color .15s}
-.add-photo-btn:hover{border-color:#aaa;color:#888}
-.add-photo-btn svg{width:20px;height:20px}
-.add-photo-btn span{font-size:11px}
+  /* GALLERY ITEMS */
+  .gallery-item{background:#fff;border:1px solid var(--border);padding:1rem;margin-bottom:.75rem;display:grid;grid-template-columns:80px 1fr auto;gap:1rem;align-items:start}
+  .gallery-thumb{width:80px;height:60px;object-fit:cover;background:#eee;display:block}
+  .gallery-thumb-empty{width:80px;height:60px;background:#eee;display:flex;align-items:center;justify-content:center;font-size:.7rem;color:#aaa}
+  .gallery-fields .field{margin-bottom:.75rem}
+  .gallery-fields .field:last-child{margin-bottom:0}
+  .btn-sm{background:none;border:1px solid var(--border);padding:.3rem .65rem;font-size:.75rem;cursor:pointer;font-family:inherit}
+  .btn-sm:hover{background:var(--warm)}
+  .btn-danger{border-color:#fca5a5;color:var(--red)}
+  .btn-danger:hover{background:#fef2f2}
+  .btn-add{display:flex;align-items:center;gap:.4rem;padding:.6rem 1rem;border:1px dashed #ccc;background:none;cursor:pointer;font-size:.82rem;color:#666;font-family:inherit;width:100%;justify-content:center;margin-top:.5rem}
+  .btn-add:hover{background:var(--warm);border-color:#aaa}
 
-/* ABOUT / CONTACT */
-.form-section{background:#fff;border-radius:10px;padding:24px;margin-bottom:16px}
-.form-section h3{font-size:15px;font-weight:600;margin-bottom:16px}
-.btn-save{background:var(--ink);color:#fff;border:none;padding:9px 18px;border-radius:6px;font-size:13px;cursor:pointer;margin-top:8px}
-.btn-save:hover{opacity:.85}
+  /* PHOTO UPLOAD */
+  .photo-upload{border:2px dashed var(--border);padding:1.5rem;text-align:center;cursor:pointer;transition:border-color .2s;position:relative}
+  .photo-upload:hover{border-color:var(--accent)}
+  .photo-upload input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer}
+  .photo-upload-text{font-size:.82rem;color:#888}
+  .photo-upload-text strong{color:var(--accent)}
+  .photo-preview{width:100%;max-height:200px;object-fit:cover;margin-top:.75rem;display:none}
 
-/* PUBLISH */
-.publish-section{background:#fff;border-radius:10px;padding:24px;margin-bottom:16px}
-.publish-section h3{font-size:15px;font-weight:600;margin-bottom:6px}
-.publish-section p{font-size:13px;color:var(--gray);margin-bottom:16px}
-.steps{display:flex;flex-direction:column;gap:10px;margin-top:16px}
-.step{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:#f8f7f5;border-radius:6px}
-.step-label{font-size:13px}
-.step-status{font-size:12px;font-weight:500;color:var(--gray)}
-.step-status.done{color:var(--success)}
-.step-status.error{color:var(--danger)}
+  /* SKILLS TAGS */
+  .tags-input{display:flex;flex-wrap:wrap;gap:.4rem;padding:.5rem;border:1px solid var(--border);background:#fff;min-height:42px;cursor:text}
+  .tag{background:var(--ink);color:#fff;font-size:.72rem;letter-spacing:.06em;padding:.2rem .55rem;display:flex;align-items:center;gap:.3rem}
+  .tag-remove{background:none;border:none;color:#fff;cursor:pointer;font-size:.9rem;line-height:1;padding:0;opacity:.7}
+  .tag-remove:hover{opacity:1}
+  .tags-text-input{border:none;outline:none;font-size:.82rem;font-family:inherit;min-width:120px;background:transparent;padding:.1rem .2rem}
 
-/* TOAST */
-.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--ink);color:#fff;padding:10px 20px;border-radius:6px;font-size:13px;opacity:0;transition:all .3s;z-index:999;pointer-events:none}
-.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
-.toast.error{background:var(--danger)}
+  /* FIELD LOG */
+  .field-log-item{background:#fff;border:1px solid var(--border);padding:1rem;margin-bottom:.75rem}
+  .field-log-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:.75rem}
+  .field-log-label{font-size:.8rem;font-weight:500}
 
-/* MODAL */
-.modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:200;display:none;align-items:center;justify-content:center}
-.modal-backdrop.open{display:flex}
-.modal{background:#fff;border-radius:12px;padding:28px;width:360px}
-.modal h3{font-size:16px;font-weight:600;margin-bottom:8px}
-.modal p{font-size:13px;color:var(--gray);margin-bottom:20px}
-.modal-btns{display:flex;gap:8px;justify-content:flex-end}
-.btn-cancel{background:none;border:1px solid var(--light);padding:8px 16px;border-radius:6px;font-size:13px;cursor:pointer}
-.btn-cancel:hover{border-color:#aaa}
+  /* PARTNERS */
+  .partner-list{display:flex;flex-wrap:wrap;gap:.4rem;margin-bottom:.75rem}
+  .partner-tag{background:var(--warm);border:1px solid var(--border);font-size:.8rem;padding:.25rem .65rem;display:flex;align-items:center;gap:.4rem}
+  .partner-tag button{background:none;border:none;cursor:pointer;color:#888;font-size:.9rem;line-height:1}
 
-/* Loading overlay */
-.loading-overlay{position:fixed;inset:0;background:rgba(240,237,232,.8);display:flex;align-items:center;justify-content:center;z-index:300;display:none}
-.loading-overlay.show{display:flex}
-.loading-spinner{text-align:center}
-.spinner{width:36px;height:36px;border:3px solid var(--light);border-top-color:var(--ink);border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 12px}
-@keyframes spin{to{transform:rotate(360deg)}}
-.loading-spinner p{font-size:13px;color:var(--gray)}
+  /* PUBLISH LOG */
+  .publish-log{background:var(--warm);border:1px solid var(--border);padding:1rem;font-size:.78rem;color:#555;font-family:monospace;max-height:160px;overflow-y:auto;margin-top:1rem;display:none}
+  .publish-log.visible{display:block}
+  .log-line{margin-bottom:.2rem}
+  .log-ok{color:#16a34a}
+  .log-err{color:var(--red)}
+
+  /* GITHUB SETUP */
+  .setup-box{background:var(--warm);border:1px solid var(--border);padding:1.25rem;margin-bottom:1.5rem}
+  .setup-box h3{font-size:.85rem;font-weight:600;margin-bottom:.75rem}
+  .setup-row{display:grid;grid-template-columns:1fr 1fr;gap:.75rem;margin-bottom:.75rem}
+
+  /* ALERTS */
+  .alert{padding:.75rem 1rem;font-size:.82rem;margin-bottom:1rem;display:none}
+  .alert.visible{display:block}
+  .alert-success{background:#dcfce7;border:1px solid #86efac;color:#166534}
+  .alert-error{background:#fef2f2;border:1px solid #fca5a5;color:#991b1b}
+
+  /* DIVIDER */
+  .divider{border:none;border-top:1px solid var(--border);margin:1.75rem 0}
 </style>
 </head>
 <body>
 
 <!-- LOGIN -->
-<div class="login-wrap" id="loginWrap">
-  <div class="login-card">
+<div id="login-screen">
+  <div class="login-box">
     <h1>Jasper Baur</h1>
-    <p>Site editor — sign in to continue</p>
-    <label>Password</label>
-    <input type="password" id="pwInput" placeholder="Enter password" autocomplete="off">
-    <button class="btn-primary" id="loginBtn">Sign in</button>
-    <div class="login-error" id="loginError">Incorrect password. Try again.</div>
+    <p>Site editor — enter your password to continue.</p>
+    <input type="password" id="pw-input" placeholder="Password" autocomplete="current-password">
+    <button class="btn-primary" onclick="doLogin()">Sign in</button>
+    <div class="login-err" id="login-err">Incorrect password. Try again.</div>
   </div>
 </div>
 
 <!-- APP -->
-<div class="app" id="app">
-  <div class="topbar">
-    <div class="topbar-left">
-      <div class="topbar-title">Jasper Baur <span>/ Site editor</span></div>
-      <div class="status-dot loading" id="statusDot"></div>
-      <div class="status-text" id="statusText">Loading...</div>
+<div id="app">
+  <header>
+    <div class="header-left">
+      <span class="header-logo">Jasper Baur</span>
+      <span class="header-title">/ Site editor</span>
+      <span class="save-status"><span class="save-dot" id="save-dot"></span> <span id="save-text">All changes saved</span></span>
     </div>
-    <div class="topbar-right">
-      <button class="btn-preview" onclick="previewSite()">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-        Preview site
-      </button>
-      <button class="btn-publish" id="publishBtn" onclick="publishSite()">Publish changes</button>
+    <div>
+      <a href="https://jasperbaur.github.io" target="_blank" class="btn-preview">Preview site ↗</a>
+      <button class="btn-publish" id="publish-btn" onclick="publishSite()">Publish changes</button>
     </div>
-  </div>
+  </header>
 
-  <div class="body">
-    <div class="sidebar">
-      <div class="nav-section">Content</div>
-      <div class="nav-item active" onclick="showSection('projects',this)">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
-        Projects
-      </div>
-      <div class="nav-item" onclick="showSection('about',this)">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-        About & bio
-      </div>
-      <div class="nav-item" onclick="showSection('contact',this)">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-        Contact info
-      </div>
-      <div class="nav-section">Site</div>
-      <div class="nav-item" onclick="showSection('publish',this)">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/></svg>
-        Publish & settings
-      </div>
+  <aside>
+    <div class="sidebar-section">Content</div>
+    <div class="nav-item active" onclick="showPanel('hero')" id="nav-hero">
+      <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="2" width="14" height="9" rx="1"/><path d="M5 13h6"/></svg>
+      Hero section
+    </div>
+    <div class="nav-item" onclick="showPanel('quote')" id="nav-quote">
+      <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 5h2v3H3zm5 0h2v3H8zM3 8v2c0 1 .5 1.5 2 1.5M8 8v2c0 1 .5 1.5 2 1.5"/></svg>
+      Quote
+    </div>
+    <div class="nav-item" onclick="showPanel('gallery')" id="nav-gallery">
+      <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="1" width="6" height="6" rx=".5"/><rect x="9" y="1" width="6" height="6" rx=".5"/><rect x="1" y="9" width="6" height="6" rx=".5"/><rect x="9" y="9" width="6" height="6" rx=".5"/></svg>
+      Gallery photos
+    </div>
+    <div class="nav-item" onclick="showPanel('about')" id="nav-about">
+      <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="5" r="3"/><path d="M2 14c0-3.3 2.7-6 6-6s6 2.7 6 6"/></svg>
+      About & bio
+    </div>
+    <div class="nav-item" onclick="showPanel('fieldlog')" id="nav-fieldlog">
+      <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 4h12M2 8h12M2 12h7"/></svg>
+      Field log
+    </div>
+    <div class="nav-item" onclick="showPanel('collaborate')" id="nav-collaborate">
+      <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M1 8h5m4 0h5M8 3v10"/></svg>
+      Collaborate
+    </div>
+    <div class="nav-item" onclick="showPanel('contact')" id="nav-contact">
+      <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="3" width="14" height="10" rx="1"/><path d="M1 6l7 4 7-4"/></svg>
+      Contact info
     </div>
 
-    <div class="main">
-      <!-- PROJECTS -->
-      <div class="section active" id="section-projects">
-        <div class="section-title">Projects</div>
-        <div class="section-desc">Click a project to edit photos and description.</div>
-        <div class="projects-grid" id="projectsGrid"></div>
-        <div class="edit-panel" id="editPanel"></div>
-      </div>
+    <div class="sidebar-section">Site</div>
+    <div class="nav-item" onclick="showPanel('publish')" id="nav-publish">
+      <svg class="nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 1v9M4 5l4-4 4 4M2 12v2h12v-2"/></svg>
+      Publish & settings
+    </div>
+  </aside>
 
-      <!-- ABOUT -->
-      <div class="section" id="section-about">
-        <div class="section-title">About & bio</div>
-        <div class="section-desc">This appears in the About section of your website.</div>
-        <div class="form-section">
-          <h3>Headline</h3>
-          <div class="field-group">
-            <label class="field-label">Tagline (shown large on the page)</label>
-            <input class="field-input" id="aboutTagline" type="text">
-          </div>
-        </div>
-        <div class="form-section">
-          <h3>Bio</h3>
-          <div class="field-group">
-            <label class="field-label">Short bio</label>
-            <textarea class="field-textarea" id="aboutShort" rows="3"></textarea>
-          </div>
-          <div class="field-group">
-            <label class="field-label">Full bio</label>
-            <textarea class="field-textarea" id="aboutFull" rows="6"></textarea>
-          </div>
-          <button class="btn-save" onclick="saveAbout()">Save about</button>
+  <main>
+
+    <!-- HERO -->
+    <div class="panel active" id="panel-hero">
+      <div class="panel-title">Hero section</div>
+      <div class="panel-sub">The full-screen image and text at the top of the page.</div>
+      <div class="field">
+        <label>Hero photo</label>
+        <div class="photo-upload" id="hero-upload-zone">
+          <input type="file" accept="image/*" onchange="handlePhotoUpload(this,'hero-preview','hero')">
+          <div class="photo-upload-text">Drop a photo here or <strong>click to browse</strong><br><span style="font-size:.72rem">JPEG · 2400px long edge · 300–600 KB</span></div>
+          <img class="photo-preview" id="hero-preview" alt="">
         </div>
       </div>
-
-      <!-- CONTACT -->
-      <div class="section" id="section-contact">
-        <div class="section-title">Contact info</div>
-        <div class="section-desc">How people can reach you.</div>
-        <div class="form-section">
-          <div class="field-group">
-            <label class="field-label">Email address</label>
-            <input class="field-input" id="contactEmail" type="email">
-          </div>
-          <div class="field-group">
-            <label class="field-label">Instagram URL</label>
-            <input class="field-input" id="contactInstagram" type="url">
-          </div>
-          <div class="field-group">
-            <label class="field-label">Instagram handle (e.g. @jasperbaur)</label>
-            <input class="field-input" id="contactHandle" type="text">
-          </div>
-          <button class="btn-save" onclick="saveContact()">Save contact info</button>
+      <div class="field">
+        <label>Overline text</label>
+        <input type="text" id="hero-overline" oninput="markDirty()">
+        <div class="hint">Small text above the headline — e.g. "Photographer · Naturalist · Adventurer"</div>
+      </div>
+      <div class="field">
+        <label>Main headline (HTML allowed)</label>
+        <textarea id="hero-title" rows="3" oninput="markDirty()"></textarea>
+        <div class="hint">Use &lt;br&gt; for line breaks, &lt;span class="ital"&gt;...&lt;/span&gt; for italics.</div>
+      </div>
+      <div class="field">
+        <label>Intro paragraph</label>
+        <textarea id="hero-intro" rows="4" oninput="markDirty()"></textarea>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label>Button 1 label</label>
+          <input type="text" id="hero-cta-work" oninput="markDirty()">
+        </div>
+        <div class="field">
+          <label>Button 2 label</label>
+          <input type="text" id="hero-cta-collab" oninput="markDirty()">
         </div>
       </div>
+      <div class="field">
+        <label>Photo credit (bottom right)</label>
+        <input type="text" id="hero-credit" oninput="markDirty()">
+      </div>
+      <div class="field">
+        <label>Photo alt text (accessibility)</label>
+        <input type="text" id="hero-imageAlt" oninput="markDirty()">
+      </div>
+    </div>
 
-      <!-- PUBLISH -->
-      <div class="section" id="section-publish">
-        <div class="section-title">Publish & settings</div>
-        <div class="section-desc">Configure your GitHub connection to publish changes live.</div>
-        <div class="publish-section">
-          <h3>GitHub connection</h3>
-          <p>Required to publish changes to your live website.</p>
-          <div class="field-group">
-            <label class="field-label">GitHub username</label>
-            <input class="field-input" id="ghUsername" type="text" value="jasperbaur" autocomplete="off">
-          </div>
-          <div class="field-group">
-            <label class="field-label">Repository name</label>
-            <input class="field-input" id="ghRepo" type="text" value="jasperbaur.github.io" autocomplete="off">
-          </div>
-          <div class="field-group">
-            <label class="field-label">Personal access token <a href="https://github.com/settings/tokens/new?scopes=repo&description=Jasper+site+editor" target="_blank" style="font-size:11px;color:var(--ink);margin-left:6px">Get new token ↗</a></label>
-            <input class="field-input" id="ghToken" type="text" placeholder="ghp_..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
-          </div>
-          <button class="btn-save" onclick="saveGhConfig()">Save connection</button>
-          <div id="ghStatus" style="font-size:12px;margin-top:8px;color:var(--gray)"></div>
+    <!-- QUOTE -->
+    <div class="panel" id="panel-quote">
+      <div class="panel-title">Quote</div>
+      <div class="panel-sub">The full-width pull quote shown between the hero and gallery.</div>
+      <div class="field">
+        <label>Quote text</label>
+        <textarea id="quote-text" rows="4" oninput="markDirty()"></textarea>
+        <div class="hint">Do not include quotation marks — they're added automatically.</div>
+      </div>
+      <div class="field">
+        <label>Attribution</label>
+        <input type="text" id="quote-cite" oninput="markDirty()">
+        <div class="hint">e.g. — Jasper Baur</div>
+      </div>
+    </div>
+
+    <!-- GALLERY -->
+    <div class="panel" id="panel-gallery">
+      <div class="panel-title">Gallery photos</div>
+      <div class="panel-sub">The photo grid on the main page. Click any photo to edit it.</div>
+      <div id="gallery-items"></div>
+      <button class="btn-add" onclick="addGalleryItem()">+ Add photo</button>
+    </div>
+
+    <!-- ABOUT -->
+    <div class="panel" id="panel-about">
+      <div class="panel-title">About & bio</div>
+      <div class="panel-sub">The portrait photo and biography text.</div>
+      <div class="field">
+        <label>Portrait photo</label>
+        <div class="photo-upload">
+          <input type="file" accept="image/*" onchange="handlePhotoUpload(this,'about-preview','about')">
+          <div class="photo-upload-text">Drop a photo here or <strong>click to browse</strong></div>
+          <img class="photo-preview" id="about-preview" alt="">
         </div>
-        <div class="publish-section">
-          <h3>Publish status</h3>
-          <p>Publishing pushes all your changes live. It takes about 60 seconds to appear.</p>
-          <div class="steps">
-            <div class="step"><span class="step-label">Connect to GitHub</span><span class="step-status" id="stepGh">—</span></div>
-            <div class="step"><span class="step-label">Push changes</span><span class="step-status" id="stepPush">—</span></div>
-            <div class="step"><span class="step-label">Site goes live</span><span class="step-status" id="stepLive">—</span></div>
-          </div>
+      </div>
+      <div class="field">
+        <label>Alt text (accessibility)</label>
+        <input type="text" id="about-imageAlt" oninput="markDirty()">
+      </div>
+      <div class="field">
+        <label>Section heading (HTML allowed)</label>
+        <textarea id="about-heading" rows="3" oninput="markDirty()"></textarea>
+        <div class="hint">Use &lt;br&gt; for line breaks, &lt;em&gt;...&lt;/em&gt; for italics.</div>
+      </div>
+      <div class="field">
+        <label>Bio paragraphs</label>
+        <div id="about-paras-list"></div>
+        <button class="btn-add" onclick="addAboutPara()">+ Add paragraph</button>
+      </div>
+      <div class="field">
+        <label>Skills / tags</label>
+        <div class="hint" style="margin-bottom:.5rem">Type a skill and press Enter to add it.</div>
+        <div class="tags-input" id="skills-tags" onclick="document.getElementById('skills-input').focus()">
+          <input type="text" class="tags-text-input" id="skills-input" placeholder="Type and press Enter…" onkeydown="handleTagInput(event,'about','skills')">
         </div>
       </div>
     </div>
-  </div>
-</div>
 
-<!-- MODALS -->
-<div class="modal-backdrop" id="addProjectModal">
-  <div class="modal">
-    <h3>New project</h3>
-    <p>Give your project a name. You can add photos after.</p>
-    <div class="field-group">
-      <label class="field-label">Project name</label>
-      <input class="field-input" id="newProjectName" type="text" placeholder="e.g. Borneo 2024">
+    <!-- FIELD LOG -->
+    <div class="panel" id="panel-fieldlog">
+      <div class="panel-title">Field log</div>
+      <div class="panel-sub">The expedition list shown on the site. Drag to reorder (coming soon).</div>
+      <div id="fieldlog-items"></div>
+      <button class="btn-add" onclick="addFieldLogItem()">+ Add entry</button>
     </div>
-    <div class="modal-btns">
-      <button class="btn-cancel" onclick="closeModal('addProjectModal')">Cancel</button>
-      <button class="btn-primary" style="width:auto;padding:8px 18px" onclick="addProject()">Create project</button>
-    </div>
-  </div>
-</div>
 
-<div class="modal-backdrop" id="deleteModal">
-  <div class="modal">
-    <h3>Remove project?</h3>
-    <p>This will remove the project from your site. Photos stored here won't be deleted from your computer.</p>
-    <div class="modal-btns">
-      <button class="btn-cancel" onclick="closeModal('deleteModal')">Cancel</button>
-      <button class="btn-primary" style="width:auto;padding:8px 18px;background:var(--danger)" id="confirmDeleteBtn">Remove</button>
+    <!-- COLLABORATE -->
+    <div class="panel" id="panel-collaborate">
+      <div class="panel-title">Collaborate</div>
+      <div class="panel-sub">The bottom section with offers and partner brands.</div>
+      <div class="field">
+        <label>Section overline</label>
+        <input type="text" id="collab-overline" oninput="markDirty()">
+      </div>
+      <div class="field">
+        <label>Heading (HTML allowed)</label>
+        <textarea id="collab-heading" rows="4" oninput="markDirty()"></textarea>
+      </div>
+      <div class="field">
+        <label>Subtext</label>
+        <textarea id="collab-subtext" rows="4" oninput="markDirty()"></textarea>
+      </div>
+      <hr class="divider">
+      <div class="field">
+        <label>Offer cards</label>
+        <div id="offer-items"></div>
+        <button class="btn-add" onclick="addOfferItem()">+ Add offer card</button>
+      </div>
+      <hr class="divider">
+      <div class="field">
+        <label>Partner / target brands</label>
+        <div class="hint" style="margin-bottom:.5rem">Type a brand name and press Enter.</div>
+        <div class="partner-list" id="partner-list"></div>
+        <input type="text" id="partner-input" placeholder="Brand name…" style="width:200px;padding:.4rem .6rem;border:1px solid var(--border);font-size:.82rem;font-family:inherit" onkeydown="handlePartnerInput(event)">
+      </div>
     </div>
-  </div>
-</div>
 
-<input type="file" id="fileInput" accept="image/*" multiple style="display:none">
-<div class="toast" id="toast"></div>
-<div class="loading-overlay" id="loadingOverlay">
-  <div class="loading-spinner">
-    <div class="spinner"></div>
-    <p id="loadingMsg">Loading...</p>
-  </div>
+    <!-- CONTACT -->
+    <div class="panel" id="panel-contact">
+      <div class="panel-title">Contact info</div>
+      <div class="panel-sub">Your email, Instagram, and phone — shown in the footer and collaborate section.</div>
+      <div class="field">
+        <label>Email</label>
+        <input type="email" id="site-email" oninput="markDirty()">
+      </div>
+      <div class="field">
+        <label>Instagram URL</label>
+        <input type="text" id="site-instagram" oninput="markDirty()">
+      </div>
+      <div class="field">
+        <label>Instagram handle (display)</label>
+        <input type="text" id="site-instagramHandle" oninput="markDirty()">
+        <div class="hint">e.g. @baurjasper</div>
+      </div>
+      <div class="field">
+        <label>Phone</label>
+        <input type="tel" id="site-phone" oninput="markDirty()">
+      </div>
+    </div>
+
+    <!-- PUBLISH -->
+    <div class="panel" id="panel-publish">
+      <div class="panel-title">Publish & settings</div>
+      <div class="panel-sub">Connect to GitHub to publish changes live.</div>
+
+      <div class="setup-box">
+        <h3>GitHub connection</h3>
+        <div class="setup-row">
+          <div class="field" style="margin:0">
+            <label>Username</label>
+            <input type="text" id="gh-user" value="jasperbaur" autocomplete="off">
+          </div>
+          <div class="field" style="margin:0">
+            <label>Repository</label>
+            <input type="text" id="gh-repo" value="jasperbaur.github.io" autocomplete="off">
+          </div>
+        </div>
+        <div class="field" style="margin-bottom:.75rem">
+          <label>Personal access token</label>
+          <input type="text" id="gh-token" autocomplete="off" placeholder="ghp_…">
+          <div class="hint">Classic token with <strong>repo</strong> scope. <a href="https://github.com/settings/tokens/new" target="_blank" style="color:var(--accent)">Create one here →</a></div>
+        </div>
+        <button class="btn-sm" onclick="saveGHConfig()">Save connection</button>
+        <span id="gh-saved-msg" style="font-size:.78rem;color:#16a34a;margin-left:.75rem;display:none">✓ Saved</span>
+      </div>
+
+      <div class="alert alert-success" id="publish-success">✓ Site published successfully! Changes are live at jasperbaur.github.io</div>
+      <div class="alert alert-error" id="publish-error"></div>
+
+      <button class="btn-publish" id="publish-btn-2" onclick="publishSite()" style="padding:.65rem 1.5rem;font-size:.85rem">Publish changes now</button>
+      <div class="publish-log" id="publish-log"></div>
+    </div>
+
+  </main>
 </div>
 
 <script>
-// ── CONFIG ─────────────────────────────────────────────────────────────────
+// ─── AUTH ────────────────────────────────────────────────
 const PASSWORD = 'jasper2024';
-let content = null;
-let currentProjectId = null;
-let fileCallback = null;
-let ghConfig = { username: 'jasperbaur', repo: 'jasperbaur.github.io', token: '' };
-
-// ── LOGIN ──────────────────────────────────────────────────────────────────
-document.getElementById('loginBtn').addEventListener('click', doLogin);
-document.getElementById('pwInput').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
-
 function doLogin() {
-  const pw = document.getElementById('pwInput').value.trim();
+  const pw = document.getElementById('pw-input').value;
   if (pw === PASSWORD) {
-    document.getElementById('loginWrap').style.display = 'none';
-    document.getElementById('app').style.display = 'flex';
-    initApp();
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    loadContent();
   } else {
-    document.getElementById('loginError').style.display = 'block';
+    document.getElementById('login-err').style.display = 'block';
   }
 }
-
-// ── INIT ───────────────────────────────────────────────────────────────────
-async function initApp() {
-  // Load saved GitHub token
-  const saved = localStorage.getItem('jasper_gh_token');
-  if (saved) {
-    ghConfig.token = saved;
-    document.getElementById('ghToken').value = saved;
-  }
-  document.getElementById('ghUsername').value = ghConfig.username;
-  document.getElementById('ghRepo').value = ghConfig.repo;
-
-  // Always load fresh from GitHub
-  await loadFromGitHub();
-}
-
-async function loadFromGitHub() {
-  setStatus('loading', 'Loading from site...');
-  try {
-    const url = `https://raw.githubusercontent.com/${ghConfig.username}/${ghConfig.repo}/main/content.json?_=${Date.now()}`;
-    const res = await fetch(url);
-    if (!res.ok) throw new Error('Could not load content.json');
-    content = await res.json();
-    // Ensure all projects have required fields
-    if (!content.projects) content.projects = [];
-    content.projects.forEach(p => {
-      if (!p.status) p.status = 'published';
-      if (!p.photos) p.photos = [];
-    });
-    setStatus('saved', 'All changes saved');
-    renderAll();
-  } catch(err) {
-    setStatus('loading', 'Could not load — using defaults');
-    content = getDefaults();
-    renderAll();
-  }
-}
-
-function getDefaults() {
-  return {
-    site: { name: 'Jasper Baur', email: '', instagram: '', instagramHandle: '@jasperbaur', phone: '' },
-    projects: [
-      { id: 'camera-trapping', title: 'Camera Trapping', status: 'published', description: '', photos: [] },
-      { id: 'te-araroa', title: 'Te Araroa', status: 'published', description: '', photos: [] },
-      { id: 'snakes-reptiles', title: 'Snakes & Reptiles', status: 'published', description: '', photos: [] },
-      { id: 'find-film', title: 'Find & Film', status: 'published', description: '', photos: [] },
-      { id: 'pacific-northwest', title: 'Pacific Northwest', status: 'draft', description: '', photos: [] }
-    ]
-  };
-}
-
-function setStatus(state, text) {
-  const dot = document.getElementById('statusDot');
-  dot.className = 'status-dot' + (state === 'loading' ? ' loading' : '');
-  document.getElementById('statusText').textContent = text;
-}
-
-// ── RENDER ─────────────────────────────────────────────────────────────────
-function renderAll() {
-  renderProjects();
-  renderAbout();
-  renderContact();
-}
-
-function renderProjects() {
-  const grid = document.getElementById('projectsGrid');
-  grid.innerHTML = '';
-  content.projects.forEach(p => {
-    const cover = p.photos && p.photos.length && p.photos[0].url ? p.photos[0].url : null;
-    const card = document.createElement('div');
-    card.className = 'project-card' + (currentProjectId === p.id ? ' active' : '');
-    card.onclick = () => openProject(p.id);
-    card.innerHTML = `
-      <div class="project-cover">
-        ${cover
-          ? `<img src="${cover}" alt="${p.title}">`
-          : `<div class="project-cover-empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg><span>No cover photo</span></div>`
-        }
-        <div class="project-badge badge-${p.status}">${p.status}</div>
-        ${p.photos && p.photos.length ? `<div class="photo-count">${p.photos.length} photo${p.photos.length !== 1 ? 's' : ''}</div>` : ''}
-      </div>
-      <div class="project-info">
-        <div class="project-name">${p.title}</div>
-        <div class="project-meta">${p.photos && p.photos.length ? p.photos.length + ' photo' + (p.photos.length !== 1 ? 's' : '') : 'No photos yet'} · ${p.status}</div>
-      </div>`;
-    grid.appendChild(card);
-  });
-
-  // Add project button
-  const addCard = document.createElement('div');
-  addCard.className = 'add-project-card';
-  addCard.onclick = () => openModal('addProjectModal');
-  addCard.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg><span>Add project</span>`;
-  grid.appendChild(addCard);
-}
-
-function renderAbout() {
-  const s = content.site || {};
-  document.getElementById('aboutTagline').value = s.tagline || '';
-  document.getElementById('aboutShort').value = s.bio_short || '';
-  document.getElementById('aboutFull').value = s.bio_full || '';
-}
-
-function renderContact() {
-  const s = content.site || {};
-  document.getElementById('contactEmail').value = s.email || '';
-  document.getElementById('contactInstagram').value = s.instagram || '';
-  document.getElementById('contactHandle').value = s.instagramHandle || '';
-}
-
-// ── PROJECT EDITOR ─────────────────────────────────────────────────────────
-function openProject(id) {
-  currentProjectId = id;
-  renderProjects();
-  const p = content.projects.find(x => x.id === id);
-  if (!p) return;
-
-  const panel = document.getElementById('editPanel');
-  panel.className = 'edit-panel open';
-
-  let photosHtml = (p.photos || []).map((ph, i) => `
-    <div class="photo-item" data-index="${i}">
-      <div class="photo-thumb">
-        ${ph.url ? `<img src="${ph.url}" alt="">` : `<div class="photo-thumb-empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:20px;height:20px"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></div>`}
-        <button class="photo-remove" onclick="removePhoto('${id}',${i})" title="Remove">✕</button>
-      </div>
-      <input class="photo-caption" type="text" placeholder="Caption..." value="${ph.caption || ''}" onchange="updateCaption('${id}',${i},this.value)">
-    </div>`).join('');
-
-  panel.innerHTML = `
-    <div class="edit-header">
-      <h3>Editing: ${p.title}</h3>
-      <div class="edit-header-right">
-        <select class="field-select" onchange="updateStatus('${id}',this.value)">
-          <option value="published" ${p.status === 'published' ? 'selected' : ''}>Published</option>
-          <option value="draft" ${p.status === 'draft' ? 'selected' : ''}>Draft (hidden)</option>
-        </select>
-        <button class="btn-danger" onclick="confirmDelete('${id}')">Remove</button>
-      </div>
-    </div>
-    <div class="field-group">
-      <label class="field-label">Project title</label>
-      <input class="field-input" type="text" value="${p.title}" onchange="updateField('${id}','title',this.value)">
-    </div>
-    <div class="field-group">
-      <label class="field-label">Description</label>
-      <textarea class="field-textarea" onchange="updateField('${id}','description',this.value)">${p.description || ''}</textarea>
-    </div>
-    <div class="field-group">
-      <div class="photos-label">Photos <span style="color:var(--gray);font-weight:400">(first photo is the cover)</span></div>
-      <div class="photos-hint">The first photo appears as the project thumbnail on the main page.</div>
-      <div class="photo-strip" id="photoStrip">
-        ${photosHtml}
-        <button class="add-photo-btn" onclick="addPhotos('${id}')">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-          <span>Add photos</span>
-        </button>
-      </div>
-    </div>`;
-
-  panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-}
-
-function updateField(id, field, value) {
-  const p = content.projects.find(x => x.id === id);
-  if (p) { p[field] = value; setStatus('loading', 'Unsaved changes'); }
-}
-
-function updateStatus(id, status) {
-  const p = content.projects.find(x => x.id === id);
-  if (p) { p.status = status; renderProjects(); setStatus('loading', 'Unsaved changes'); }
-}
-
-function updateCaption(id, index, caption) {
-  const p = content.projects.find(x => x.id === id);
-  if (p && p.photos[index]) { p.photos[index].caption = caption; setStatus('loading', 'Unsaved changes'); }
-}
-
-function removePhoto(id, index) {
-  const p = content.projects.find(x => x.id === id);
-  if (p) { p.photos.splice(index, 1); openProject(id); setStatus('loading', 'Unsaved changes'); }
-}
-
-// ── PHOTO UPLOAD ───────────────────────────────────────────────────────────
-function addPhotos(projectId) {
-  fileCallback = (files) => handlePhotos(projectId, files);
-  document.getElementById('fileInput').value = '';
-  document.getElementById('fileInput').click();
-}
-
-document.getElementById('fileInput').addEventListener('change', function() {
-  if (fileCallback && this.files.length) {
-    fileCallback(this.files);
-    fileCallback = null;
-  }
+document.getElementById('pw-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') doLogin();
 });
 
-function handlePhotos(projectId, files) {
-  const p = content.projects.find(x => x.id === projectId);
-  if (!p) return;
-  let loaded = 0;
-  const total = files.length;
-  showLoading(`Preparing ${total} photo${total > 1 ? 's' : ''}...`);
-  Array.from(files).forEach(file => {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      p.photos.push({ id: 'ph-' + Date.now() + '-' + Math.random().toString(36).slice(2,6), url: e.target.result, caption: '', filename: file.name });
-      loaded++;
-      if (loaded === total) {
-        hideLoading();
-        openProject(projectId);
-        setStatus('loading', 'Unsaved changes');
-        showToast(total + ' photo' + (total > 1 ? 's' : '') + ' added — remember to publish');
-      }
-    };
-    reader.readAsDataURL(file);
+// ─── NAV ────────────────────────────────────────────────
+function showPanel(id) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('panel-' + id).classList.add('active');
+  document.getElementById('nav-' + id).classList.add('active');
+}
+
+// ─── DATA ───────────────────────────────────────────────
+let C = null; // content object
+
+function loadContent() {
+  fetch('content.json?t=' + Date.now())
+    .then(r => r.json())
+    .then(data => {
+      C = data;
+      populateAll();
+      log('Content loaded from content.json');
+    })
+    .catch(err => {
+      log('Could not load content.json: ' + err, true);
+    });
+}
+
+function populateAll() {
+  // Hero
+  setVal('hero-overline', C.hero.overline);
+  setVal('hero-title', C.hero.title);
+  setVal('hero-intro', C.hero.intro);
+  setVal('hero-cta-work', C.hero.ctaWork);
+  setVal('hero-cta-collab', C.hero.ctaCollaborate);
+  setVal('hero-credit', C.hero.credit);
+  setVal('hero-imageAlt', C.hero.imageAlt);
+  if (C.hero.image) showExistingPhoto('hero-preview', C.hero.image);
+
+  // Quote
+  setVal('quote-text', C.quote.text);
+  setVal('quote-cite', C.quote.cite);
+
+  // Gallery
+  renderGallery();
+
+  // About
+  setVal('about-heading', C.about.heading);
+  setVal('about-imageAlt', C.about.imageAlt);
+  if (C.about.image) showExistingPhoto('about-preview', C.about.image);
+  renderAboutParas();
+  renderSkillTags();
+
+  // Field log
+  renderFieldLog();
+
+  // Collaborate
+  setVal('collab-overline', C.collaborate.overline);
+  setVal('collab-heading', C.collaborate.heading);
+  setVal('collab-subtext', C.collaborate.subtext);
+  renderOffers();
+  renderPartners();
+
+  // Contact
+  setVal('site-email', C.site.email);
+  setVal('site-instagram', C.site.instagram);
+  setVal('site-instagramHandle', C.site.instagramHandle);
+  setVal('site-phone', C.site.phone);
+
+  // GH config
+  const cfg = JSON.parse(localStorage.getItem('jasper_gh_config') || '{}');
+  if (cfg.user) document.getElementById('gh-user').value = cfg.user;
+  if (cfg.repo) document.getElementById('gh-repo').value = cfg.repo;
+  if (cfg.token) document.getElementById('gh-token').value = cfg.token;
+}
+
+function setVal(id, val) {
+  const el = document.getElementById(id);
+  if (el) el.value = val || '';
+}
+
+function showExistingPhoto(previewId, src) {
+  const img = document.getElementById(previewId);
+  if (img) { img.src = src; img.style.display = 'block'; }
+}
+
+// ─── GALLERY ────────────────────────────────────────────
+function renderGallery() {
+  const container = document.getElementById('gallery-items');
+  container.innerHTML = '';
+  (C.gallery || []).forEach((item, i) => {
+    const div = document.createElement('div');
+    div.className = 'gallery-item';
+    div.innerHTML = `
+      <div>
+        ${item.image ? `<img class="gallery-thumb" src="${item.image}" alt="">` : `<div class="gallery-thumb-empty">No photo</div>`}
+        <label class="btn-sm" style="display:block;text-align:center;margin-top:.4rem;cursor:pointer">
+          Change<input type="file" accept="image/*" style="display:none" onchange="handleGalleryPhoto(this,${i})">
+        </label>
+      </div>
+      <div class="gallery-fields">
+        <div class="field">
+          <label>Title</label>
+          <input type="text" value="${escHtml(item.title||'')}" oninput="C.gallery[${i}].title=this.value;markDirty()">
+        </div>
+        <div class="field">
+          <label>Caption line</label>
+          <input type="text" value="${escHtml(item.caption||'')}" oninput="C.gallery[${i}].caption=this.value;markDirty()">
+        </div>
+        <div class="field">
+          <label>Lightbox caption</label>
+          <input type="text" value="${escHtml(item.dataCaption||'')}" oninput="C.gallery[${i}].dataCaption=this.value;markDirty()">
+        </div>
+        <div class="field">
+          <label>Alt text</label>
+          <input type="text" value="${escHtml(item.alt||'')}" oninput="C.gallery[${i}].alt=this.value;markDirty()">
+        </div>
+      </div>
+      <div>
+        <button class="btn-sm btn-danger" onclick="removeGalleryItem(${i})">Remove</button>
+      </div>`;
+    container.appendChild(div);
   });
 }
 
-// ── ADD / DELETE PROJECT ───────────────────────────────────────────────────
-function addProject() {
-  const name = document.getElementById('newProjectName').value.trim();
-  if (!name) return;
-  const id = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-  content.projects.push({ id, title: name, status: 'draft', description: '', photos: [] });
-  closeModal('addProjectModal');
-  document.getElementById('newProjectName').value = '';
-  renderProjects();
-  openProject(id);
-  setStatus('loading', 'Unsaved changes');
-  showToast('Project created');
-}
-
-let deleteId = null;
-function confirmDelete(id) {
-  deleteId = id;
-  openModal('deleteModal');
-  document.getElementById('confirmDeleteBtn').onclick = () => {
-    content.projects = content.projects.filter(p => p.id !== deleteId);
-    if (currentProjectId === deleteId) {
-      currentProjectId = null;
-      document.getElementById('editPanel').className = 'edit-panel';
-    }
-    renderProjects();
-    closeModal('deleteModal');
-    setStatus('loading', 'Unsaved changes');
-    showToast('Project removed');
+function handleGalleryPhoto(input, idx) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    C.gallery[idx].image = e.target.result;
+    markDirty();
+    renderGallery();
   };
+  reader.readAsDataURL(file);
 }
 
-// ── ABOUT & CONTACT ────────────────────────────────────────────────────────
-function saveAbout() {
-  if (!content.site) content.site = {};
-  content.site.tagline = document.getElementById('aboutTagline').value;
-  content.site.bio_short = document.getElementById('aboutShort').value;
-  content.site.bio_full = document.getElementById('aboutFull').value;
-  setStatus('loading', 'Unsaved changes');
-  showToast('About saved — remember to publish');
+function addGalleryItem() {
+  C.gallery.push({ title: '', caption: '', dataCaption: '', alt: '', image: '' });
+  markDirty();
+  renderGallery();
 }
 
-function saveContact() {
-  if (!content.site) content.site = {};
-  content.site.email = document.getElementById('contactEmail').value;
-  content.site.instagram = document.getElementById('contactInstagram').value;
-  content.site.instagramHandle = document.getElementById('contactHandle').value;
-  setStatus('loading', 'Unsaved changes');
-  showToast('Contact saved — remember to publish');
+function removeGalleryItem(i) {
+  if (!confirm('Remove this photo?')) return;
+  C.gallery.splice(i, 1);
+  markDirty();
+  renderGallery();
 }
 
-// ── GITHUB ─────────────────────────────────────────────────────────────────
-function saveGhConfig() {
-  ghConfig.username = document.getElementById('ghUsername').value.trim();
-  ghConfig.repo = document.getElementById('ghRepo').value.trim();
-  ghConfig.token = document.getElementById('ghToken').value.trim();
-  localStorage.setItem('jasper_gh_token', ghConfig.token);
-  document.getElementById('ghStatus').textContent = 'Saved ✓';
-  setTimeout(() => document.getElementById('ghStatus').textContent = '', 3000);
+// ─── ABOUT PARAGRAPHS ───────────────────────────────────
+function renderAboutParas() {
+  const list = document.getElementById('about-paras-list');
+  list.innerHTML = '';
+  (C.about.paragraphs || []).forEach((p, i) => {
+    const div = document.createElement('div');
+    div.style.marginBottom = '.75rem';
+    div.innerHTML = `<textarea rows="3" style="width:100%;padding:.5rem .75rem;border:1px solid var(--border);font-family:inherit;font-size:.88rem;resize:vertical" oninput="C.about.paragraphs[${i}]=this.value;markDirty()">${escHtml(p)}</textarea>
+      <button class="btn-sm btn-danger" onclick="removeAboutPara(${i})">Remove</button>`;
+    list.appendChild(div);
+  });
+}
+function addAboutPara() {
+  C.about.paragraphs.push('');
+  markDirty();
+  renderAboutParas();
+}
+function removeAboutPara(i) {
+  C.about.paragraphs.splice(i, 1);
+  markDirty();
+  renderAboutParas();
+}
+
+// ─── SKILLS TAGS ────────────────────────────────────────
+function renderSkillTags() {
+  const container = document.getElementById('skills-tags');
+  // Remove existing tags (keep input)
+  container.querySelectorAll('.tag').forEach(t => t.remove());
+  const input = document.getElementById('skills-input');
+  (C.about.skills || []).forEach((s, i) => {
+    const span = document.createElement('span');
+    span.className = 'tag';
+    span.innerHTML = `${escHtml(s)}<button class="tag-remove" onclick="removeSkill(${i})">×</button>`;
+    container.insertBefore(span, input);
+  });
+}
+function handleTagInput(e, obj, key) {
+  if (e.key === 'Enter' && e.target.value.trim()) {
+    e.preventDefault();
+    C.about.skills.push(e.target.value.trim());
+    e.target.value = '';
+    markDirty();
+    renderSkillTags();
+  }
+}
+function removeSkill(i) {
+  C.about.skills.splice(i, 1);
+  markDirty();
+  renderSkillTags();
+}
+
+// ─── FIELD LOG ──────────────────────────────────────────
+function renderFieldLog() {
+  const container = document.getElementById('fieldlog-items');
+  container.innerHTML = '';
+  (C.fieldLog || []).forEach((row, i) => {
+    const div = document.createElement('div');
+    div.className = 'field-log-item';
+    div.innerHTML = `
+      <div class="field-log-header">
+        <span class="field-log-label">${escHtml(row.name || 'Entry ' + (i+1))}</span>
+        <button class="btn-sm btn-danger" onclick="removeFieldLog(${i})">Remove</button>
+      </div>
+      <div class="field-row">
+        <div class="field" style="margin:0">
+          <label>Year / status</label>
+          <input type="text" value="${escHtml(row.year||'')}" oninput="C.fieldLog[${i}].year=this.value;markDirty()">
+        </div>
+        <div class="field" style="margin:0">
+          <label>Badge</label>
+          <input type="text" value="${escHtml(row.badge||'')}" oninput="C.fieldLog[${i}].badge=this.value;markDirty()">
+        </div>
+      </div>
+      <div class="field" style="margin-top:.75rem">
+        <label>Project name</label>
+        <input type="text" value="${escHtml(row.name||'')}" oninput="C.fieldLog[${i}].name=this.value;markDirty();this.closest('.field-log-item').querySelector('.field-log-label').textContent=this.value">
+      </div>
+      <div class="field">
+        <label>Description</label>
+        <textarea rows="2" oninput="C.fieldLog[${i}].description=this.value;markDirty()">${escHtml(row.description||'')}</textarea>
+      </div>`;
+    container.appendChild(div);
+  });
+}
+function addFieldLogItem() {
+  C.fieldLog.push({ year: '', name: '', description: '', badge: '' });
+  markDirty();
+  renderFieldLog();
+}
+function removeFieldLog(i) {
+  if (!confirm('Remove this entry?')) return;
+  C.fieldLog.splice(i, 1);
+  markDirty();
+  renderFieldLog();
+}
+
+// ─── OFFERS ─────────────────────────────────────────────
+function renderOffers() {
+  const container = document.getElementById('offer-items');
+  container.innerHTML = '';
+  (C.collaborate.offers || []).forEach((o, i) => {
+    const div = document.createElement('div');
+    div.className = 'card';
+    div.style.marginBottom = '.75rem';
+    div.innerHTML = `
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.75rem">
+        <span style="font-size:.85rem;font-weight:500">${escHtml(o.title || 'Offer ' + (i+1))}</span>
+        <button class="btn-sm btn-danger" onclick="removeOffer(${i})">Remove</button>
+      </div>
+      <div class="field">
+        <label>Audience label</label>
+        <input type="text" value="${escHtml(o.audience||'')}" oninput="C.collaborate.offers[${i}].audience=this.value;markDirty()">
+      </div>
+      <div class="field">
+        <label>Title</label>
+        <input type="text" value="${escHtml(o.title||'')}" oninput="C.collaborate.offers[${i}].title=this.value;markDirty()">
+      </div>
+      <div class="field" style="margin:0">
+        <label>Description</label>
+        <textarea rows="3" oninput="C.collaborate.offers[${i}].desc=this.value;markDirty()">${escHtml(o.desc||'')}</textarea>
+      </div>`;
+    container.appendChild(div);
+  });
+}
+function addOfferItem() {
+  C.collaborate.offers.push({ audience: '', title: '', desc: '' });
+  markDirty();
+  renderOffers();
+}
+function removeOffer(i) {
+  if (!confirm('Remove this offer card?')) return;
+  C.collaborate.offers.splice(i, 1);
+  markDirty();
+  renderOffers();
+}
+
+// ─── PARTNERS ───────────────────────────────────────────
+function renderPartners() {
+  const list = document.getElementById('partner-list');
+  list.innerHTML = '';
+  (C.collaborate.partners || []).forEach((p, i) => {
+    const span = document.createElement('span');
+    span.className = 'partner-tag';
+    span.innerHTML = `${escHtml(p)} <button onclick="removePartner(${i})">×</button>`;
+    list.appendChild(span);
+  });
+}
+function handlePartnerInput(e) {
+  if (e.key === 'Enter' && e.target.value.trim()) {
+    e.preventDefault();
+    C.collaborate.partners.push(e.target.value.trim());
+    e.target.value = '';
+    markDirty();
+    renderPartners();
+  }
+}
+function removePartner(i) {
+  C.collaborate.partners.splice(i, 1);
+  markDirty();
+  renderPartners();
+}
+
+// ─── PHOTO UPLOAD ───────────────────────────────────────
+function handlePhotoUpload(input, previewId, section) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const src = e.target.result;
+    const img = document.getElementById(previewId);
+    img.src = src; img.style.display = 'block';
+    if (section === 'hero') C.hero.image = src;
+    if (section === 'about') C.about.image = src;
+    markDirty();
+  };
+  reader.readAsDataURL(file);
+}
+
+// ─── COLLECT FORM VALUES ────────────────────────────────
+function collectForm() {
+  C.hero.overline = document.getElementById('hero-overline').value;
+  C.hero.title = document.getElementById('hero-title').value;
+  C.hero.intro = document.getElementById('hero-intro').value;
+  C.hero.ctaWork = document.getElementById('hero-cta-work').value;
+  C.hero.ctaCollaborate = document.getElementById('hero-cta-collab').value;
+  C.hero.credit = document.getElementById('hero-credit').value;
+  C.hero.imageAlt = document.getElementById('hero-imageAlt').value;
+
+  C.quote.text = document.getElementById('quote-text').value;
+  C.quote.cite = document.getElementById('quote-cite').value;
+
+  C.about.heading = document.getElementById('about-heading').value;
+  C.about.imageAlt = document.getElementById('about-imageAlt').value;
+
+  C.collaborate.overline = document.getElementById('collab-overline').value;
+  C.collaborate.heading = document.getElementById('collab-heading').value;
+  C.collaborate.subtext = document.getElementById('collab-subtext').value;
+
+  C.site.email = document.getElementById('site-email').value;
+  C.site.instagram = document.getElementById('site-instagram').value;
+  C.site.instagramHandle = document.getElementById('site-instagramHandle').value;
+  C.site.phone = document.getElementById('site-phone').value;
+}
+
+// ─── DIRTY / SAVE STATUS ────────────────────────────────
+let dirty = false;
+function markDirty() {
+  dirty = true;
+  document.getElementById('save-text').textContent = 'Unsaved changes';
+  document.getElementById('save-dot').style.background = '#f59e0b';
+}
+function markSaved() {
+  dirty = false;
+  document.getElementById('save-text').textContent = 'All changes saved';
+  document.getElementById('save-dot').style.background = '#22c55e';
+}
+
+// ─── GITHUB ─────────────────────────────────────────────
+function saveGHConfig() {
+  const cfg = {
+    user: document.getElementById('gh-user').value.trim(),
+    repo: document.getElementById('gh-repo').value.trim(),
+    token: document.getElementById('gh-token').value.trim()
+  };
+  localStorage.setItem('jasper_gh_config', JSON.stringify(cfg));
+  const msg = document.getElementById('gh-saved-msg');
+  msg.style.display = 'inline';
+  setTimeout(() => msg.style.display = 'none', 2000);
 }
 
 async function publishSite() {
-  if (!ghConfig.token) {
-    showToast('Please add your GitHub token in Publish & settings', true);
-    showSection('publish', document.querySelector('.nav-item:nth-child(4)'));
+  collectForm();
+  const cfg = JSON.parse(localStorage.getItem('jasper_gh_config') || '{}');
+  if (!cfg.user || !cfg.repo || !cfg.token) {
+    showPanel('publish');
+    alert('Please save your GitHub connection settings first (Publish & settings).');
     return;
   }
 
-  const btn = document.getElementById('publishBtn');
-  btn.disabled = true;
-  btn.textContent = 'Publishing...';
-  setStep('stepGh', '', '—'); setStep('stepPush', '', '—'); setStep('stepLive', '', '—');
+  const btns = document.querySelectorAll('#publish-btn,#publish-btn-2');
+  btns.forEach(b => { b.disabled = true; b.textContent = 'Publishing…'; });
 
-  try {
-    setStep('stepGh', 'done', '✓ Connected');
-    const json = JSON.stringify(content, null, 2);
-    await pushToGitHub('content.json', json, 'Update site content');
-    setStep('stepPush', 'done', '✓ Pushed');
-    setTimeout(() => setStep('stepLive', 'done', '✓ Live in ~60s'), 2000);
-    setStatus('saved', 'All changes saved');
-    showToast('Published! Site updates in about 60 seconds.');
-  } catch(err) {
-    setStep('stepGh', 'error', '✗ ' + err.message);
-    showToast('Publish failed: ' + err.message, true);
+  const logEl = document.getElementById('publish-log');
+  logEl.innerHTML = ''; logEl.classList.add('visible');
+  document.getElementById('publish-success').classList.remove('visible');
+  document.getElementById('publish-error').classList.remove('visible');
+
+  function addLog(msg, err) {
+    const div = document.createElement('div');
+    div.className = 'log-line ' + (err ? 'log-err' : 'log-ok');
+    div.textContent = msg;
+    logEl.appendChild(div);
   }
 
-  btn.disabled = false;
-  btn.textContent = 'Publish changes';
+  try {
+    const json = JSON.stringify(C, null, 2);
+    const encoded = btoa(unescape(encodeURIComponent(json)));
+    const apiBase = `https://api.github.com/repos/${cfg.user}/${cfg.repo}/contents`;
+
+    addLog('Fetching current content.json SHA…');
+    const shaRes = await fetch(`${apiBase}/content.json`, {
+      headers: { Authorization: `token ${cfg.token}`, Accept: 'application/vnd.github.v3+json' }
+    });
+    let sha = null;
+    if (shaRes.ok) {
+      const shaData = await shaRes.json();
+      sha = shaData.sha;
+      addLog('Got SHA: ' + sha.slice(0,8) + '…');
+    } else {
+      addLog('No existing file — will create new.');
+    }
+
+    addLog('Uploading content.json…');
+    const body = { message: 'Update site content via admin', content: encoded };
+    if (sha) body.sha = sha;
+
+    const putRes = await fetch(`${apiBase}/content.json`, {
+      method: 'PUT',
+      headers: {
+        Authorization: `token ${cfg.token}`,
+        Accept: 'application/vnd.github.v3+json',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(body)
+    });
+
+    if (!putRes.ok) {
+      const errData = await putRes.json();
+      throw new Error(errData.message || putRes.statusText);
+    }
+
+    addLog('✓ Published successfully!');
+    document.getElementById('publish-success').classList.add('visible');
+    markSaved();
+  } catch(err) {
+    addLog('Error: ' + err.message, true);
+    const errEl = document.getElementById('publish-error');
+    errEl.textContent = 'Publish failed: ' + err.message;
+    errEl.classList.add('visible');
+  }
+
+  btns.forEach(b => { b.disabled = false; b.textContent = 'Publish changes'; });
 }
 
-async function pushToGitHub(path, body, message) {
-  const base = `https://api.github.com/repos/${ghConfig.username}/${ghConfig.repo}/contents/${path}`;
-  const headers = { 'Authorization': `token ${ghConfig.token}`, 'Content-Type': 'application/json', 'Accept': 'application/vnd.github.v3+json' };
-  let sha = null;
-  try { const r = await fetch(base, { headers }); if (r.ok) { const d = await r.json(); sha = d.sha; } } catch(e) {}
-  const payload = { message, content: btoa(unescape(encodeURIComponent(body))) };
-  if (sha) payload.sha = sha;
-  const res = await fetch(base, { method: 'PUT', headers, body: JSON.stringify(payload) });
-  if (!res.ok) { const e = await res.json(); throw new Error(e.message || 'GitHub error'); }
-  return res.json();
+// ─── UTILS ──────────────────────────────────────────────
+function escHtml(str) {
+  return String(str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function log(msg, err) {
+  console[err ? 'error' : 'log']('[admin]', msg);
 }
 
-function setStep(id, cls, text) {
-  const el = document.getElementById(id);
-  if (el) { el.className = 'step-status' + (cls ? ' ' + cls : ''); el.textContent = text; }
-}
-
-function previewSite() {
-  window.open(`https://${ghConfig.username}.github.io`, '_blank');
-}
-
-// ── UI HELPERS ─────────────────────────────────────────────────────────────
-function showSection(name, el) {
-  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-  document.getElementById('section-' + name).classList.add('active');
-  if (el) el.classList.add('active');
-}
-
-function openModal(id) { document.getElementById(id).classList.add('open'); }
-function closeModal(id) { document.getElementById(id).classList.remove('open'); }
-
-function showToast(msg, isError) {
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.className = 'toast show' + (isError ? ' error' : '');
-  setTimeout(() => t.className = 'toast', 3500);
-}
-
-function showLoading(msg) {
-  document.getElementById('loadingMsg').textContent = msg || 'Loading...';
-  document.getElementById('loadingOverlay').classList.add('show');
-}
-function hideLoading() { document.getElementById('loadingOverlay').classList.remove('show'); }
+// ─── PHOTO UPLOAD DISPLAY FIX ───────────────────────────
+// Show uploaded photo when file chosen
+document.querySelectorAll('.photo-upload input[type=file]').forEach(inp => {
+  inp.addEventListener('change', function() {
+    // handled by onchange inline
+  });
+});
 </script>
 </body>
 </html>
